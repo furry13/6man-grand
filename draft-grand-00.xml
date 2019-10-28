@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC4033 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4033.xml">
+<!ENTITY RFC4291 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4291.xml">
+<!ENTITY RFC4429 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4429.xml">
+<!ENTITY RFC4861 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4861.xml">
+<!ENTITY RFC4862 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4862.xml">
+<!ENTITY RFC4941 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4941.xml">
+<!ENTITY RFC6052 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6052.xml">
+<!ENTITY RFC6105 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6105.xml">
+<!ENTITY RFC6146 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6146.xml">
+<!ENTITY RFC6147 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6147.xml">
+<!ENTITY RFC6583 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6583.xml">
+<!ENTITY RFC6775 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6775.xml">
+<!ENTITY RFC6877 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6877.xml">
+<!ENTITY RFC7050 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7050.xml">
+<!ENTITY RFC7225 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7225.xml">
+<!ENTITY RFC7556 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7556.xml">
+<!ENTITY RFC7858 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7858.xml">
+<!ENTITY RFC8174 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8174.xml">
+<!ENTITY RFC8305 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8305.xml">
+<!ENTITY RFC8505 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8505.xml">
+]>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<!-- used by XSLT processors -->
+<!-- For a complete list and description of processing instructions (PIs),
+     please see http://xml.resource.org/authoring/README.html. -->
+<!-- Below are generally applicable Processing Instructions (PIs) that most I-Ds might want to use.
+     (Here they are set differently than their defaults in xml2rfc v1.32) -->
+<?rfc strict="yes" ?>
+<!-- give errors regarding ID-nits and DTD validation -->
+<!-- control the table of contents (ToC) -->
+<?rfc toc="yes"?>
+<!-- generate a ToC -->
+<?rfc tocdepth="4"?>
+<!-- the number of levels of subsections in ToC. default: 3 -->
+<!-- control references -->
+<?rfc symrefs="yes"?>
+<!-- use symbolic references tags, i.e, [RFC2119] instead of [1] -->
+<?rfc sortrefs="yes" ?>
+<!-- sort the reference entries alphabetically -->
+<!-- control vertical white space
+     (using these PIs as follows is recommended by the RFC Editor) -->
+<?rfc compact="yes" ?>
+<!-- do not start each main section on a new page -->
+<?rfc subcompact="no" ?>
+<!-- keep one blank line between list items -->
+<!-- end of list of popular I-D processing instructions -->
+<rfc ipr="trust200902"
+     obsoletes=""
+     category="std"
+     updates="4861, 4862, 4429, 4941"
+     docName="draft-linkova-6man-grand-00">
+
+  <!-- category values: std, bcp, info, exp, and historic -->
+
+  <!-- ***** FRONT MATTER ***** -->
+
+  <front>
+    <!-- The abbreviated title is used in the page header - it is only necessary if the
+         full title is longer than 39 characters -->
+
+    <title>Gratuitous Neighor Discovery: Creating Neighbor Cache Entries on First-Hop Routers</title>
+
+    <!-- add 'role="editor"' below for the editors if appropriate -->
+    <author fullname="Jen Linkova" initials="J." surname="Linkova">
+      <organization>Google</organization>
+
+      <address>
+        <postal>
+          <street>1 Darling Island Rd</street>
+          <city>Pyrmont</city>
+          <region>NSW</region>
+          <code>2009</code>
+          <country>AU</country>
+        </postal>
+
+        <phone></phone>
+        <email>furry@google.com</email>
+      </address>
+    </author>
+
+    <date/>
+
+    <!-- If the month and year are both specified and are the current ones, xml2rfc will fill
+         in the current day for you. If only the current year is specified, xml2rfc will fill
+	 in the current day and month for you. If the year is not the current one, it is
+	 necessary to specify at least a month (xml2rfc assumes day="1" if not specified for the
+	 purpose of calculating the expiry date).  With drafts it is normally sufficient to
+	 specify just the year. -->
+
+    <!-- Meta-data Declarations -->
+
+    <area>Internet</area>
+
+    <workgroup>IPv6 Maintenance</workgroup>
+
+    <!-- WG name at the upperleft corner of the doc,
+         IETF is fine for individual submissions.
+	 If this element is not present, the default is "Network Working Group",
+         which is used by the RFC Editor as a nod to the history of the IETF. -->
+
+    <keyword>template</keyword>
+
+    <!-- Keywords will be incorporated into HTML output
+         files in a meta tag but they have no effect on text or nroff
+         output. If you submit your draft to the RFC Editor, the
+         keywords will be used for the search engine. -->
+
+    <abstract>
+	    <t>
+		    Neighbor Discovery (RFC4861) is used by IPv6 nodes to determine the link-layer addresses of neighboring nodes as well as to discover and maintain reachability information. This document updates <xref target="RFC4861"/> to allow routers to proactively create a Neighbor Cache entry when a new IPv6 address is assigned to a host. It also updates <xref target="RFC4862"/> and <xref target="RFC4429"/> recommending hosts to send unsolicited Neighbor Advertisements upon assigning a new IPv6 address. The proposed change will minimize the delay and packet loss when a host initiate connections to off-link destination from a new IPv6 address. 
+	    </t>
+    </abstract>
+  </front>
+
+  <middle>
+	  <section title="Introduction">
+		  <t>
+			  The Neighbor Discovery state machine defined in  <xref target="RFC4861"/> implies that communications between IPv6 nodes
+			  are in most cases bi-directional and if a host A is trying to communicate to its neighbor, host B, the return traffic flows could be expected.  So when the host A start the address resolution process, the target host would also create an entry for the host A address in its neighbor cache. That entry will be used for sending the return traffic to the host A.
+		  </t>
+		  <t>
+			  However when a host sends traffic to off-lik destinations the different scenario might be observed. After receiving an RA the host populates its neighbor cache with the default router address and is able to send traffic to off-link destinations. At the same time the router does not have any cache entries for the host global addresses and therefore needs to start address resolution upon receiving the first packet of the return traffic flow. While waiting for the resolution to complete routers only keep a very small number of packets in the queue (as recommended in <xref target="RFC4861"/> Section 7.2.2. It might cause user-visible packet loss and performance degradation.
+		  </t>
+		  <t>
+			  The detailed problem statement and various solution approaches could be found in <xref target="I-D.linkova-v6ops-nd-cache-init"/>. This document summarized the proposed neighor discovery changes to address the issue.
+		  </t>
+		  <section title="Requirements Language">
+			  <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+                        "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+                        "OPTIONAL" in this document are to be interpreted as described in
+                        BCP 14 <xref target="RFC2119"/> <xref target="RFC8174"/>
+			when, and only when, they appear in all capitals, as shown here.</t>
+      </section>
+      <section title="Terminology">
+	      <t>
+		      ND: Neighbor Discovery, <xref target="RFC4861"/>.
+	      </t>
+	      <t>
+		      SLAAC: IPv6 Stateless Address Autoconfiguration, <xref target="RFC4862"/>.
+	      </t>
+	      <t>
+		      NS: Neighbor Solicitation, <xref target="RFC4861"/>.
+	      </t>
+	      <t>
+		      NA: Neighbor Advertisement, <xref target="RFC4861"/>.
+	      </t>
+	      <t>
+		      RS: Router Solicitation, <xref target="RFC4861"/>.
+	      </t> 
+	      <t>
+		      RA: Router Advertisement,  <xref target="RFC4861"/>.
+	      </t>
+	      <t>
+		      SLLA: Source link-layer Address, an option in the ND packets containing the link-layer address of the sender of the packet (<xref target="RFC4861"/>).
+	      </t>
+	      <t>
+		      TLLA: Target link-layer Address, an option in the ND packets containing the link-layer address of the target (<xref target="RFC4861"/>).
+	      </t>
+	      <t>
+		      GUA: Global Unicast Address (<xref target="RFC4291"/>).
+	      </t>
+
+	      <t>
+		      DAD: Duplicate Address Detection,  <xref target="RFC4862"/>.
+	      </t>
+	      <t>
+		      Optimistic DAD: a modification of DAD, <xref target="RFC4429"/>.
+	      </t>
+
+         </section>
+      </section>
+
+      <section title="Proposed Changes to Neighbor Discovery">
+	      <t>
+		      The following changes are proposed to minimize the delay in creating new entries in a router neighbor cache
+		      <list style="symbols">
+			      <t>
+				     Hosts SHOULD send unsolicited NA upon assigning a new IPv6 address to its inteface.
+			      </t>
+			      <t>
+				     Routers MAY create a new cache entry upon receiving an unsolicited NA from a host.
+			      </t>
+		      </list>
+	      </t>
+	      <t>
+		      The following sections discuss those changes  in more detail.
+	      </t>
+	      <section title="Hosts Sending Gratuitous Neighbor Advertisements">
+		      <t>
+			      The section 7.2.6 of  <xref target="RFC4861"/> discusses using unsolicited Neighbor 
+			      Advertisement to inform node neighbors of the new link-layer address quickly. As discussed above it would be desirable to inform first-hop routes of the new global address assigned to the node interface using the same mechanism.
+			      As the intended recipients of such notifications are first-hop routers the unsolicited Neighbor Advertisements can be sent to all-routers multicast address (ff02::2). This approach would also reduce multicast noise level in large networks.
+                      </t>
+
+	      </section>
+	      <section title="Routers Creating Cache Entries Upon Receiving Unsolicited Neighbor Advertisements">
+		      <t>
+			      The section 7.2.5 of <xref target="RFC4861"/> states:
+                          "When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.
+   If no entry exists, the advertisement SHOULD be silently discarded.
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target".
+
+		      </t>
+		      <t>
+			      The reasoning behind dropping unsolicited Neighbor Advertisements ("the
+   recipient has apparently not initiated any communication with the
+   target") is valid for onlink host-to-host communication but, as discussed in <xref target="I-D.linkova-v6ops-nd-cache-init"/>  
+   does not really apply for the scenario when the host is announcing its address to routers.
+		      </t>
+		      <t>
+			      Therefore it would be benefitial to allow routers creating new entries upon receiving an unsolicited Neighbor Advertisement. While such behaviour would not formally violate <xref target="RFC4861"/> it's worth clarifying the difference in the expected behaviour between hosts and routers. 
+		      </t>
+	      </section>
+    </section>
+	    <section anchor="avoid_dis" title="Avoiding Disruption">
+		    <t>
+			    If hosts following the recommendations in this document are using the DAD mechanism defined in <xref target="RFC4862"/>, they would send unsolicited NA as soon as the address changes the state from tentative to preferred (after its uniqueness has been verified). However hosts willing to minimize network stack configuration delays might be using optimistic addresses, which means there is possibility of the address not being unique on the link. The section 2.2 of <xref target="RFC4429"/> discusses measures to ensure that ND packets from the optimistic address do not override any existing neighbor cache entries as it would cause traffic interruption of the rightful  address owner in case of address conflict.
+		    </t>
+		    <t>
+			    As hosts willing to speed up their network stack configuration are most likely to be affected by the problem outlined in this document it seems reasonable for such hosts to advertise their optimistic GUAs by sending unsolicited NAs. The main question to consider is the potential risk of overriding the cache entry for the rightful address owner if the optimistic address happens to be duplicated.
+		    </t>
+		    <t>
+			    As per section 7.2.5 of <xref target="RFC4861"/> if the Neighbor Cache entry for the target address already exists and is in in any state other than INCOMPLETE then the only change the unsolicited NA could cause is to change the entry from REACHABLE to STALE. It would not cause any traffic interruption for the rightful address owner.
+		    </t>
+		    <t>
+			    If there is no entry then it would be created/updated with the supplied LLA and its state set to STALE. In that case as soon as the entry is used for sending traffic to the host, the entry state will be changed to DELAY and the Neighbor Unreachability Detection would be started and the rightful owner LLA will be entered in the cache. So in the scenario when the rightful owner does not use the address for communication then it might be a short (a few seconds) period of time when the data packets sent from the outside could reach the host with the optimistic address. However it seems likely that hosts using Optimistic DAD would start sending/receiving traffic right away, so the first return packet would trigger the NUD process and rewrite the cache. 
+		    </t>
+		    <t>
+			    Another corner case is the INCOMPLETE cache entry for the address. If the host sends an unsolicited NA from the Optimistic address it would update the entry with the host LLA and set the entry to the STALE state. As the INCOMPLETE entry means that the router has started the ND process for the address and the multicast NS has been sent, the rightful owner is expected to reply with solicited NA which would recover the cache entry and set the LLA to the rightful  owner's one. The risk here:
+			    <list style="symbols">
+				    <t>
+					    The data packet arrives after the unsolicited NA from the host but before the rightful owner responded with the solicited NA. Those packets would be sent to the host with the optimistic address instead of its rightful  owner. However without the unsolicited NA those packets would have been dropped anyway (as the entry was in INCOMPLETE state).
+				    </t>
+			    </list>
+
+		    </t>
+
+	    </section>
+	    <section anchor="RFC_UPD" title="Modifications to RFC-Mandated Behavior">
+		    <t>
+			    All normative text in this memo is contained in this section.
+		    </t>
+		    <section title="Modification to RFC4861 Neighbor Discovery for IP version 6 (IPv6)">
+			    <section title="Modification to the section 7.2.5">
+		      <t>
+			      This document proposes the following changes to the section 7.2.5 of <xref target="RFC4861"/>:
+		      </t>
+		      <t>
+			      ------------------------------------------------------------------
+		      </t>
+		      <t>
+			      OLD TEXT:
+		      </t>
+		      <t>
+			      When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.
+   If no entry exists, the advertisement SHOULD be silently discarded.
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target.
+		      </t>
+		      <t>
+			      NEW TEXT:
+		      </t>
+		      <t>
+			      When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.
+   If no entry exists, hosts SHOULD  silently discard the advertisement.
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target. Routers MAY  create a new entry for the target address with the link-layer address set to the Target link-layer address option (if supplied). The entry its reachability state MUST also be set to STALE. If the received Neighbor Advertisement does not contain the Target link-layer address option the advertisement SHOULD be silently discarded. Routers  SHOULD have a configuration knob to enable creating a new
+      cache entry upon receiving an unsolicited Neighbor Advertisement on a specific
+      interface.
+		      </t>
+		      <t>
+			      ------------------------------------------------------------------
+		      </t>
+
+	      </section>
+	      <section title="Modification to the section 7.2.6">
+		      <t>
+			      This document proposes the following changes to the section 7.2.6 of <xref target="RFC4861"/>:
+		      </t>
+
+                      <t>
+                              OLD TEXT:
+		      </t>
+		      <t>
+			      In such cases, a node MAY send up to MAX_NEIGHBOR_ADVERTISEMENT
+   unsolicited Neighbor Advertisement messages to the all-nodes
+   multicast address.  These advertisements MUST be separated by at
+   least RetransTimer seconds.
+		      </t>
+                      <t>
+                              NEW TEXT:
+		      </t>
+		      <t>
+			      In such cases, a node MAY send up to MAX_NEIGHBOR_ADVERTISEMENT
+   unsolicited Neighbor Advertisement messages to the all-nodes
+   multicast address.  These advertisements MUST be separated by at
+   least RetransTimer seconds. 
+		      </t>
+		      <t>
+			      A host may also wish to notify its first-hop routers when it configures a new global IPv6 address so the routers can proactively populate their neighbor caches with the corresponding entries. In such cases a host MAY send up to MAX_NEIGHBOR_ADVERTISEMENT
+   unsolicited Neighbor Advertisement messages to the all-routers multicast address.  These advertisements MUST be separated by at
+   least RetransTimer seconds. The first advertisement SHOULD be sent as soon as one of the
+      following events happens:
+		      </t>
+		      <t>
+			      <list style="symbols">
+				      <t>(if Optimistic DAD <xref target="RFC4429"/> is used): a new Optimistic GUA is assigned
+					      to the host interface.</t>
+				      <t>
+					      (if Optimistic DAD is not used): a GUA changes the state from
+         tentative to preferred.
+				      </t>
+			      </list>
+
+		      </t>
+                      <t>
+                              ------------------------------------------------------------------
+		      </t>
+		      <t>
+
+		      </t>
+
+
+	      </section>
+	      </section>
+	    </section>
+
+
+
+    <section anchor="IANA" title="IANA Considerations">
+	    <t>
+		    This memo asks the IANA for no new parameters.
+	    </t>
+    </section>
+
+    <section anchor="Security" title="Security Considerations">
+	    <t>
+                    One of the potential attack vector to consider is a cache spoofing when the attacker might try to install a cache entry for the victim's IPv6 address and the attacker's Link-Layer address. However it should be noted that this document does not propose any changes for the scenario when the ND cache for the given IPv6 address already exists. Therefore it is not possible for the attacker to override any existing cache entry. 
+	    </t>
+	    <t>
+		    A malicious host could attempt to exhaust the neighbor cache on the router by creating a large number of STALE entries. However this attack vector is not new and this document does not increase the risk of such attack: the attacker could do it, for example, by sending a NS or RS packet with SLLAO included. All recommendations from <xref target="RFC6583"/> still apply.
+	    </t>
+	    <t>
+		    Announcing a new address to all-routers multicast address may inform an on-link attacker about IPv6 addresses assigned to the host. However hiding information about the specific IPv6 address should not be considered a security measure as it falls into 'Security through obscurity' category. If peer-to-peer onlink communications are not desirable they should be prevented by proper layer2 security mechanisms. Therefore the risk of allowing hosts to send unsolicited Neighbor Advertisements to all-routers multicast address is low.
+	    </t>
+    </section>
+    <section anchor="Acknowledgements" title="Acknowledgements">
+	    <t>
+		    Thanks to the following people (in alphabetical order) for their
+   review and feedback: Lorenzo Colitti, Tatuya Jinmei, Erik Kline, Warren Kumari, Michael Richardson, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+	    </t>
+    </section>
+  </middle>
+
+  <!--  *****BACK MATTER ***** -->
+
+  <back>
+    <references title="Normative References">
+      &RFC2119;
+      &RFC4291;
+      &RFC4429;
+      &RFC4861;
+      &RFC4862;
+      &RFC6775;
+      &RFC8305;
+      &RFC8505;
+      &RFC8174;
+    </references>
+
+    <references title="Informative References">
+	    &RFC4941;
+	    &RFC6583;
+	    <?rfc include="reference.I-D.linkova-v6ops-nd-cache-init" ?>
+    </references>
+
+  </back>
+</rfc>
