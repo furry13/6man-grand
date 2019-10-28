@@ -50,7 +50,7 @@
 <rfc ipr="trust200902"
      obsoletes=""
      category="std"
-     updates="4861, 4862, 4429, 4941"
+     updates="4861"
      docName="draft-linkova-6man-grand-00">
 
   <!-- category values: std, bcp, info, exp, and historic -->
