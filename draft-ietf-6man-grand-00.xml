@@ -111,7 +111,7 @@
 			  are in most cases bi-directional and if a host A is trying to communicate to its neighbor, host B, the return traffic flows could be expected.  So when the host A starts the address resolution process, the target host would also create an entry for the host A address in its neighbor cache. That entry will be used for sending the return traffic to the host A.
 		  </t>
 		  <t>
-			  However when a host sends traffic to off-link destinations a different scenario is observed. After receiving a Router Advertisement the host populates its neighbor cache with the default router IPv6 and link-layer addresses and is able to send traffic to off-link destinations. At the same time the router does not have any cache entries for the host global addresses yet and only starts address resolution upon receiving the first packet of the return traffic flow. While waiting for the resolution to complete routers only keep a very small number of packets in the queue (as recommended in <xref target="RFC4861"/> Section 7.2.2. All subsequent packets arriving before the resolution process finishes are likely to be dropped. It might cause user-visible packet loss and performance degradation
+			  However when a host sends traffic to off-link destinations a different scenario is observed. After receiving a Router Advertisement the host populates its neighbor cache with the default router IPv6 and link-layer addresses and is able to send traffic to off-link destinations. At the same time the router does not have any cache entries for the host global addresses yet and only starts address resolution upon receiving the first packet of the return traffic flow. While waiting for the resolution to complete routers only keep a very small number of packets in the queue, as recommended in <xref target="RFC4861"/> Section 7.2.2. All subsequent packets arriving before the resolution process finishes are likely to be dropped. It might cause user-visible packet loss and performance degradation.
 		  </t>
 		  <t>
 			  The detailed problem statement and the various solution approaches could be found in <xref target="I-D.ietf-v6ops-nd-cache-init"/>. This document summarizes the proposed neighbor discovery updates to address the issue.
@@ -170,7 +170,7 @@
 		      The following changes are proposed to minimize the delay in creating new entries in a router neighbor cache
 		      <list style="symbols">
 			      <t>
-				     A host SHOULD send unsolicited NAs upon assigning a new IPv6 address to its interface.
+				     A node SHOULD send unsolicited NAs upon assigning a new IPv6 address to its interface.
 			      </t>
 			      <t>
 				     A router SHOULD create a new cache entry upon receiving an unsolicited NA from a host.
@@ -178,9 +178,9 @@
 		      </list>
 	      </t>
 	      <t>
-		      The following sections discuss these changes  in more detail.
+		      The following sections discuss these changes in more detail.
 	      </t>
-	      <section anchor="hosts" title="Hosts Sending Gratuitous Neighbor Advertisements">
+	      <section anchor="hosts" title="Nodes Sending Gratuitous Neighbor Advertisements">
 		      <t>
 			      The section 7.2.6 of  <xref target="RFC4861"/> discusses using unsolicited Neighbor 
 			      Advertisement to inform node neighbors of the new link-layer address quickly. 
