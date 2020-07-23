@@ -222,7 +222,7 @@
    Therefore it would be beneficial to allow routers creating new entries upon receiving an unsolicited Neighbor Advertisement.
 		      </t>
 		      <t>
-				      This document updates <xref target="RFC4861"/> so that routers create a new Neighbor Cache entry when receive an unsolicited Neighbor Advertisement.
+				      This document updates <xref target="RFC4861"/> so that routers create a new Neighbor Cache entry upon receiving an unsolicited Neighbor Advertisement.
 					      The proposed changes do not modify routers behaviour specified in <xref target="RFC4861"/> for the scenario when the corresponding Neighbor Cache entry already exists.
 
 		      </t>
@@ -267,7 +267,7 @@
 
 					    <list style="numbers">
 						    <t>
-								    The host configures the address and set its state to Optimistic.
+								    The host configures the address and sets its state to Optimistic.
 						    </t>
 						    <t>
 								    The host sends an unsolicited NA with the Override flag set to zero and starts sending traffic from the Optimistic address.
@@ -304,7 +304,7 @@
 					    </t>
 
 						    <t>
-								    The host configures the address and set its state to Optimistic.
+								    The host configures the address and sets its state to Optimistic.
 						    </t>
 						    <t>
 								    The host sends an unsolicited NA with the Override flag set to zero and starts sending traffic from the Optimistic address.
@@ -336,7 +336,7 @@
 
 					    </t>
 					    <t>
-							    However it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simulatniously (within tens of milliseconds):
+							    However it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simultaneously (within tens of milliseconds):
 						    <list style="symbols">
 							    <t>
 									    One host starts using a new IPv6 address and sending traffic.
