@@ -39,7 +39,7 @@
      obsoletes=""
      category="std"
      updates="4861"
-     docName="draft-ietf-6man-grand-02">
+     docName="draft-ietf-6man-grand-01">
 
   <!-- category values: std, bcp, info, exp, and historic -->
 
@@ -105,23 +105,15 @@
 
   <middle>
 	  <section title="Introduction">
-
 		  <t>
 			  The Neighbor Discovery state machine defined in  <xref target="RFC4861"/> assumes that communications between IPv6 nodes
-			  are in most cases bi-directional and if a node A is trying to communicate to its neighbor, node B, the return traffic flows could be expected.  So when the node A starts the address resolution process, the target node B would also create an entry for  A address in its neighbor cache. That entry will be used for sending the return traffic to A.
+			  are in most cases bi-directional and if a node A is trying to communicate to its neighbor, neighbor B, the return traffic flows could be expected.  So when the node A starts the address resolution process, the target node would also create an entry for  A address in its neighbor cache. That entry will be used for sending the return traffic to A.
 		  </t>
-			  <t>
-                          In particular, section 7.2.5 of <xref target="RFC4861"/> states:
-                          "When a valid Neighbor Advertisement is received (either solicited or unsolicited), the Neighbor Cache is searched for the target's entry.
-                          If no entry exists, the advertisement SHOULD be silently discarded.
-   There is no need to create an entry if none exists, since the recipient has apparently not initiated any communication with the target."
-                  </t>
 		  <t>
-				  While this approach is perfectly suitable for host-to-host on-link communications, it does not work so well when a host sends traffic to off-link destinations.
-				  After joining the network and receiving a Router Advertisement the host populates its neighbor cache with the default router IPv6 and link-layer addresses and is able to send traffic to off-link destinations.
-				  At the same time the router does not have any cache entries for the host global addresses yet and only starts address resolution upon receiving the first packet of the return traffic flow.
-				  While waiting for the resolution to complete routers only keep a very small number of packets in the queue, as recommended in Section 7.2.2 <xref target="RFC4861"/>.
-					  All subsequent packets arriving before the resolution process finishes are likely to be dropped. It might cause user-visible packet loss and performance degradation.
+			  However when a host sends traffic to off-link destinations a different scenario is observed. After receiving a Router Advertisement the host populates its neighbor cache with the default router IPv6 and link-layer addresses and is able to send traffic to off-link destinations. At the same time the router does not have any cache entries for the host global addresses yet and only starts address resolution upon receiving the first packet of the return traffic flow. While waiting for the resolution to complete routers only keep a very small number of packets in the queue, as recommended in Section 7.2.2 <xref target="RFC4861"/>. All subsequent packets arriving before the resolution process finishes are likely to be dropped. It might cause user-visible packet loss and performance degradation.
+		  </t>
+		  <t>
+			  The detailed problem statement and the various solution approaches could be found in <xref target="I-D.ietf-v6ops-nd-cache-init"/>. This document summarizes the proposed neighbor discovery updates to address the issue.
 		  </t>
 		  <section title="Requirements Language">
 			  <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -173,73 +165,7 @@
 	      </t>
 
          </section>
- </section>
- <section title="Problem Statement">
-	 <t>
-		 The most typical scenario when the problem may arise is a host joining the network, forming a new address and
- using that address for accessing the Internet:
-                  </t>
-                  <t>
-                          <list style="numbers">
-                                  <t>
-                                          A host joins the network and receives a Router Advertisement (RA) packet from the first-hop router (either a periodic unsolicited RA or a response to a Router Solicitation sent by the host).
-                                                  The RA contains information the host needs to perform SLAAC and to configure its network stack.
-                                         As in most cases the RA also contains the link-layer address of the router, the host can populate its Neighbor Cache with the router's link-local and link-layer addresses.
-                                  </t>
-                                  <t>
-                                          The host starts opening connections to off-link destinations.
-                                          A very common use case is a mobile device sending probes to detect the Internet connectivity
-and/or the presence of a captive portal on the network.
-						  To speed up that process many implementations use Optimistic DAD which allows them to send probes before the DAD process is completed.
-							  At that moment the device neighbor cache contains all information required to send those probes (such as the default router link-local the link-layer addresses).
-                                                  The router neighbor cache, however, might contain an entry for the device link-local
-address (if the device has been performing the address resolution for the router link-local address), but there are no entries for the device global addresses.
-                                  </t>
-<t>
-                                          Return traffic is received by the first-hop router.
-                                          As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address.
-                                          Most router implementations buffer only one data packet while resolving the packet destination address, so it would drop all subsequent packets for the host global address, until the address resolution process is completed.
-                                  </t>
-                                  <t>
-                                        If the host sends multiple probes in parallel, it would consider all but one of them failed.
-                                        That leads to user-visible delay in connecting to the network, especially if the host implements some form of backoff mechanism and does not retransmit the probes as soon as possible.
-                                  </t>
-                          </list>
-                  </t>
-                  <t>
-                                  This scenario illustrates the problem occurring when the device connects to the network for the first time or after a timeout long enough for the device address to be removed from the router's neighbor cache.
-                                  However, the same sequence of events happen when the host starts using a new global address previously unseen by the router, such as a new privacy address <xref target="RFC4941"/> or if the router's Neighbor Cache has been flushed.
-                  </t>
-                  <t>
-                          While in dual-stack networks this problem might be hidden by Happy Eyeballs <xref target="RFC8305"/> it manifests quite clearly in IPv6-only environments, especially wireless ones, leading to poor user experience and contributing to a negative perception of IPv6-only solutions as unstable and non-deployable.
-                  </t>
-
- </section>
- <section title="Solution Requirements">
-		 <t>
-                It would be highly desirable to improve the Neighbor Discovery mechanics so routers have a usable cache entry for a host address by the time the router receives the first packet for that address.
-                 In particular:
-
-                 <list style="symbols">
-                         <t>
-                                 If the router does not have a Neighbor Cache entry for the address, a STALE entry needs to be created.
-                         </t>
-                         <t>
-                                 The solution needs to work for Optimistic addresses as well.
-                                 Devices implementing the Optimistic DAD usually attempt to minimize the delay in connecting to the network and therefore are more likely to be affected by the problem described in this document.
-                         </t>
-                         <t>
-                                 In case of duplicate addresses present in the network, the proposed solution MUST NOT override the existing entry.
-                         </t>
-                         <t>
-                                 In topologies with multiple first-hop routers the cache needs to be updated on all of them, as traffic might be asymmetric: outgoing flows leaving the network via one router while the return traffic enters the segment via another one.
-                        </t>
-                </list>
-        </t>
-        <t>
-                        In addition the solution MUST NOT exacerbate issues described in <xref target="RFC6583"/> and MUST be compatible with the recommendations provided in <xref target="RFC6583"/>.
-        </t>
- </section>
+      </section>
 
       <section title="Proposed Changes to Neighbor Discovery">
 	      <t>
@@ -291,7 +217,7 @@ address (if the device has been performing the address resolution for the router
 		      <t>
 			      The reasoning behind dropping unsolicited Neighbor Advertisements ("the
    recipient has apparently not initiated any communication with the
-   target") is valid for onlink host-to-host communication but, as discussed above, 
+   target") is valid for onlink host-to-host communication but, as discussed in <xref target="I-D.ietf-v6ops-nd-cache-init"/>  
    it does not really apply for the scenario when the host is announcing its address to routers.
    Therefore it would be beneficial to allow routers creating new entries upon receiving an unsolicited Neighbor Advertisement.
 		      </t>
@@ -304,14 +230,11 @@ address (if the device has been performing the address resolution for the router
     </section>
 	    <section anchor="avoid_dis" title="Avoiding Disruption">
 		    <t>
-				    If nodes following the recommendations in this document are using the DAD mechanism defined in <xref target="RFC4862"/>, they would send unsolicited NA as soon as the address changes the state from tentative to preferred (after its uniqueness has been verified).
-					    However nodes willing to minimize network stack configuration delays might be using optimistic addresses, which means there is a possibility of the address not being unique on the link.
-					    The section 2.2 of <xref target="RFC4429"/> discusses measures to ensure that ND packets from the optimistic address do not override any existing neighbor cache entries as it would cause traffic interruption of the rightful  address owner in case of address conflict.
-						    As nodes willing to speed up their network stack configuration are most likely to be affected by the problem outlined in this document it seems reasonable for such hosts to advertise their optimistic addresses by sending unsolicited NAs. 
-						    The main question to consider is the potential risk of overriding the cache entry for the rightful address owner if the optimistic address happens to be duplicated.  
+			    If hosts following the recommendations in this document are using the DAD mechanism defined in <xref target="RFC4862"/>, they would send unsolicited NA as soon as the address changes the state from tentative to preferred (after its uniqueness has been verified). However hosts willing to minimize network stack configuration delays might be using optimistic addresses, which means there is a possibility of the address not being unique on the link. The section 2.2 of <xref target="RFC4429"/> discusses measures to ensure that ND packets from the optimistic address do not override any existing neighbor cache entries as it would cause traffic interruption of the rightful  address owner in case of address conflict.
+			    As hosts willing to speed up their network stack configuration are most likely to be affected by the problem outlined in this document it seems reasonable for such hosts to advertise their optimistic addresses by sending unsolicited NAs. The main question to consider is the potential risk of overriding the cache entry for the rightful address owner if the optimistic address happens to be duplicated.  
 		    </t>
 		    <t>
-				    The following sections are discussing the address collision scenario when a node sends an unsolicited NA for an address in the Optimistic state, while another node has the same address assigned already.
+				    The following sections are discussing the address collision scenario when a host sends an unsolicited NA for an address in the Optimistic state, while another host has the same address assigned already.
 		    </t>
 		    <section anchor="avoid_dis_exists" title="Neighbor Cache Entry Exists in Any State Other That INCOMPLETE">
 		    <t>
@@ -512,184 +435,6 @@ address (if the device has been performing the address resolution for the router
 	      </section>
 	    </section>
 
-	<section title="Solutions Considered but Discarded">
-		<t>
-                      There are other possible approaches to address the problem, for example:
-                      <list style="symbols">
-                              <t>
-                                      Just do nothing.
-                              </t>
-                              <t>
-                                      Migrating from the "reactive" Neighbor Discovery (<xref target="RFC4861"/>) to the registration-based mechanisms (<xref target="RFC8505"/>).
-                              </t>
-                              <t>
-                                     Creating new entries in routers Neighbor Cache by gleaning from Neighbor Discovery DAD messages.
-                              </t>
-                              <t>
-                                      Initiates bidirectional communication from the host to the router using the host GUA.
-                              </t>
-                              <t>
-                                      Making the probing logic on hosts more robust.
-                              </t>
-                              <t>
-                                      Increasing the buffer size on routers.
-                              </t>
-                              <t>
-                                      Transit dataplane traffic from an unknown address (an address w/o the corresponding neighbor cache entry) triggers an address resolution process on the router.
-                              </t>
-                      </list>
-              </t>
-              <t>
-                      It should be noted that some of those options are already implemented by some vendors. The following sections discuss those approaches and the reasons they were discarded.
-	      </t>
-	      <section title="Do Nothing">
-                      <t>
-                              One of the possible approaches might be to declare that everything is working as intended and let the upper-layer protocols to deal with packet loss. The obvious drawbacks include:
-                                      <list style="symbols">
-                                              <t>
-                                                      Unhappy users.
-                                              </t>
-                                              <t>
-                                                      Many support tickets.
-                                              </t>
-                                              <t>
-                                                      More resistance to deploy IPv6 and IPv6-Only networks.
-                                              </t>
-                                      </list>
-                      </t>
-	      </section>
-
-	       <section title="Change to the Registration-Based Neighbor Discovery">
-                      <t>
-                              The most radical approach would be to move away from the reactive ND as defined in <xref target="RFC4861"/> and expand the registration-based ND (<xref target="RFC6775"/>, <xref target="RFC8505"/>) used in Low-Power Wireless Personal Area Networks (6LoWPANs) to the rest of IPv6 deployments.
-                              This option requires some investigation and discussions and seems to be excessive for the problem described in this document.
-                      </t>
-	      </section>
-
-	      <section title="Host Sending NS to the Router Address from Its GUA">
-		      <t>
-			      The host could force creating a STALE entry for its GUA in the router ND cache by sending the following  Neighbor Solicitation message:
-			      <list  style="symbols">
-				      <t>
-					      The NS source address is the host GUA.
-				      </t>
-				      <t>
-						      The destination address is the default router IPv6 address.
-				      </t>
-				      <t>
-					      The Source Link-Layer Address option contains the host link-layer address.
-				      </t>
-				      <t>
-					      The target address is the host default router address (the default router address the host received in the RA).
-				      </t>
-			      </list>
-		      </t>
-		      <t>
-			      The main disadvantages of this approach are:
-			      <list  style="symbols">
-				      <t>
-					      Would not work for Optimistic addresses as section 2.2 of <xref target="RFC4429"/> explicitly prohibits sending Neighbor Solicitations from an Optimistic Address.
-				      </t>
-				      <t>
-					      If first-hop redundancy is deployed in the network, the NS would reach the active router only, so all backup routers (or all active routers except one) would not get their neighbor cache updated.
-				      </t>
-				      <t>
-						      Some wireless devices are known to alter ND packets and perform various non-obvious forms of ND proxy actions.
-						     In some cases, unsolicited NAs might not even reach the routers.
-				      </t>
-			      </list>
-		      </t>
-	      </section>
-
-	       <section title="Host Sending Router Solicitation from its GUA">
-                              <t>
-				      The host could send a router solicitation message to 'all routers' multicast address, using its GUA as a source.
-				      If the host link-layer address is included in the Source Link-Layer Address option, the router would create a STALE entry for the host GUA as per the section 6.2.6 of <xref target="RFC4861"/>.
-				      However, this approach can not be used if the GUA is in optimistic state: section 2.2 of <xref target="RFC4429"/> explicitly prohibits using an Optimistic Address as the source address of a Router Solicitation with a SLLAO as it might disrupt the rightful owner of the address in the case of a collision.
-				      So for the optimistic addresses the host can send an RS without SLLAO included.
-				      In that case the router may respond with either a multicast or a unicast RA (only the latter would create a cache entry).
-                      </t>
-		      <t>
-			      This approach has the following drawbacks:
-                                      <list style="symbols">
-                                              <t>
-						      If the address is in the Optimistic state the RS can not contain SLLAO. As a result the router would only create a cache entry if solicited RAs are sent as unicast.
-						      Routers sending solicited RAs as multicast would not create a new cache entry as they do not need to send a unicast packet back to the host.
-					      </t>
-					      <t>
-						      There might be a random delay between receiving an RS and sending a unicast RA back (and creating a cache entry) which might undermine the idea of creating the cache entry proactively.
-                                              </t>
-                                              <t>
-                                                      Some wireless devices are known to intercept ND packets and perform various non-obvious forms of ND proxy actions. In some cases the RS might not even reach the routers.
-                                              </t>
-
-                                      </list>
-                      </t>
-	      </section>
-
-
-	       <section title="Routers Populating Their Caches by Gleaning From Neighbor Discovery Packets">
-		       <t>
-			       Routers may be able to learn about new addresses by gleaning from the DAD Neighbor Solicitation messages.
-			       The router could listen to all solicited node multicast address groups and upon receiving a Neighbor Solicitation from the unspecified address search its Neighbor Cache for the solicitation's Target Address.
-			       If no entry exists, the router may create an entry, set its reachability state to 'INCOMPLETE' and start the address resolution for that entry.
-                      </t>
-		      <t>
-			      The same solution was proposed in <xref target= "I-D.halpern-6man-nd-pre-resolve-addr" />. Some routing vendors support such optimization already. However, this approach has a number of drawbacks and therefore should not be used as the only solution:
-                                      <list style="symbols">
-                                              <t>
-                                                      Routers need to receive all multicast Neighbor Discovery packets which might negatively impact the routers CPU.
-                                              </t>
-                                              <t>
-						      If the router starts the address resolution as soon as it receives the DAD Neighbor Solicitation the host might be still performing DAD and the target address might be tentative.
-						      In that case, the host SHOULD silently ignore the received Neighbor Solicitation from the router as per the Section 5.4.3 of <xref target="RFC4862"/>. 
-						      As a result the router might not be able to complete the address resolution before the return traffic arrives.
-
-                                              </t>
-                                      </list>
-                      </t>
-	      </section>
-
-	      <section title="Initiating Hosts-to-Routers Communication">
-		      <t>
-			      The host may force the router to start address resolution by sending a data packet such as ping or traceroute to its default router link-local address, using the GUA as a source address.  
-			      As the RTT to the default router  is lower than RTT to any off-link destinations it's quite likely that the router would start the neighbor discovery process for the host GUA before the first packet of the returning traffic arrives.
-                      </t>
-                      <t> This approach has the following drawbacks:
-                                      <list style="symbols">
-                                              <t>
-                                                      Data packets to the router link-local address could be blocked by security policy or control plane protection mechanism.
-                                              </t>
-                                              <t>
-                                                      It introduces an additional overhead for routers control plane (in addition to processing ND packets, the data packet needs to be processed as well).
-                                              </t>
-					      <t>
-						      Unless the data packet is sent to 'all routers' ff02::2 multicast address, if the network provides a first-hop redundancy then only the active router would create a new cache entry.
-                                              </t>
-                                      </list>
-                      </t>
-	      </section>
-
-	      <section title="Transit Dataplane Traffic From a New Address Triggering Address Resolution">
-		      <t>
-			      When a router receives a transit packet, it might check the presence of the neighbor cache entry for the packet source address and if the entry does not, exist start address resolution process.
-			      This approach does ensure that a Neighbor Cache entry is proactively created every time a new, previously unseen GUA is used for sending offlink traffic.
-However this approach has a number of limitations, in particular:
-<list style="symbols">
-<t>If traffic flows are asymmetrical the return traffic might not transit the same router as the original traffic which triggered the address resolution.
-So the neighbor cache entry is created on the "wrong" router, not the one which actually needs the neighbor cache entry for the host address.
-</t>
-<t>
-The functionality needs to be limited to explicitly configured networks/interfaces, as the router needs to distinguish between onlink addresses (ones the router needs to have Neighbor Cache entries for) and the rest of the address space.
-</t>
-<t>
-Implementing such functionality is much more complicated than all other solutions as it would involve complex data-control planes interaction.
-</t>
-</list>
-		      </t>
-	      </section>
-
-    </section>
 
 
     <section anchor="IANA" title="IANA Considerations">
@@ -717,7 +462,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Igor Gashinsky, Fernando Gont, Tatuya Jinmei, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+   comments, review and feedback: Lorenzo Colitti, Fernando Gont, Tatuya Jinmei, Erik Kline, Warren Kumari, Erik Nordmark, Michael Richardson, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
@@ -730,19 +475,15 @@ Implementing such functionality is much more complicated than all other solution
       &RFC4291;
       &RFC4429;
       &RFC4861;
-		    &RFC4862;
-		    &RFC6775;
-    &RFC8305;
-      &RFC8505;
+      &RFC4862;
       &RFC8174;
     </references>
 
     <references title="Informative References">
 	    &RFC3756;
 	    &RFC4541;
-		    &RFC6583;
-		    &RFC4941;
-            <?rfc include="reference.I-D.halpern-6man-nd-pre-resolve-addr" ?>
+	    &RFC6583;
+	    <?rfc include="reference.I-D.ietf-v6ops-nd-cache-init" ?>
     </references>
 
   </back>
