@@ -39,7 +39,7 @@
      obsoletes=""
      category="std"
      updates="4861"
-     docName="draft-ietf-6man-grand-03">
+     docName="draft-ietf-6man-grand-02">
 
   <!-- category values: std, bcp, info, exp, and historic -->
 
@@ -184,8 +184,7 @@
                                   <t>
                                           A host joins the network and receives a Router Advertisement (RA) packet from the first-hop router (either a periodic unsolicited RA or a response to a Router Solicitation sent by the host).
                                                   The RA contains information the host needs to perform SLAAC and to configure its network stack.
-						  The RA is send from the router's link-local address to link-local destination and may contain the link-layer address of the router.
-						  As a result the host can populate its Neighbor Cache with the router's link-local and link-layer addresses.
+                                         As in most cases the RA also contains the link-layer address of the router, the host can populate its Neighbor Cache with the router's link-local and link-layer addresses.
                                   </t>
                                   <t>
                                           The host starts opening connections to off-link destinations.
@@ -198,9 +197,8 @@ address (if the device has been performing the address resolution for the router
                                   </t>
 <t>
                                           Return traffic is received by the first-hop router.
-		As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address.
-		As per Section 7.2.2 of <xref target="RFC4861"/> Routers MUST buffer at least one data packet and MAY buffer more, while resolving the packet destination address.
-			However most router implementations limit the buffer size to a few packets only, so  all subsequent packets for the host global address are dropped, until the address resolution process is completed.
+                                          As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address.
+                                          Most router implementations buffer only one data packet while resolving the packet destination address, so it would drop all subsequent packets for the host global address, until the address resolution process is completed.
                                   </t>
                                   <t>
                                         If the host sends multiple probes in parallel, it would consider all but one of them failed.
@@ -209,7 +207,7 @@ address (if the device has been performing the address resolution for the router
                           </list>
                   </t>
                   <t>
-                                  This scenario illustrates the problem occurring when the device connects to the network for the first time or after an inactivity period long enough for the device address to be removed from the router's neighbor cache.
+                                  This scenario illustrates the problem occurring when the device connects to the network for the first time or after a timeout long enough for the device address to be removed from the router's neighbor cache.
                                   However, the same sequence of events happen when the host starts using a new global address previously unseen by the router, such as a new privacy address <xref target="RFC4941"/> or if the router's Neighbor Cache has been flushed.
                   </t>
                   <t>
@@ -445,9 +443,6 @@ address (if the device has been performing the address resolution for the router
 			      OLD TEXT:
 		      </t>
 		      <t>
-			      ------------------------------------------------------------------
-		      </t>
-		      <t>
 			      When a valid Neighbor Advertisement is received (either solicited or
    unsolicited), the Neighbor Cache is searched for the target's entry.
    If no entry exists, the advertisement SHOULD be silently discarded.
@@ -456,13 +451,7 @@ address (if the device has been performing the address resolution for the router
    target.
 		      </t>
 		      <t>
-			      ------------------------------------------------------------------
-		      </t>
-		      <t>
 			      NEW TEXT:
-		      </t>
-		      <t>
-			      ------------------------------------------------------------------
 		      </t>
 		      <t>
 			      When a valid Neighbor Advertisement is received (either solicited or
@@ -470,7 +459,7 @@ address (if the device has been performing the address resolution for the router
    If no entry exists, hosts SHOULD  silently discard the advertisement.
    There is no need to create an entry if none exists, since the
    recipient has apparently not initiated any communication with the
-				      target. Routers SHOULD create a new entry for the target address with the link-layer address set to the Target link-layer address option (if supplied). The entry its reachability state MUST also be set to STALE. If the received Neighbor Advertisement does not contain the Target link-layer address option the advertisement SHOULD be silently discarded. 
+   target. Routers SHOULD create a new entry for the target address with the link-layer address set to the Target link-layer address option (if supplied). The entry its reachability state MUST also be set to STALE. If the received Neighbor Advertisement does not contain the Target link-layer address option the advertisement SHOULD be silently discarded. 
 		      </t>
 		      <t>
 			      ------------------------------------------------------------------
@@ -486,21 +475,12 @@ address (if the device has been performing the address resolution for the router
                               OLD TEXT:
 		      </t>
 		      <t>
-			      ------------------------------------------------------------------
-		      </t>
-		      <t>
 				      Also, a node belonging to an anycast address MAY multicast
    unsolicited Neighbor Advertisements for the anycast address when the
    node's link-layer address changes.
 		      </t>
-		      <t>
-			      ------------------------------------------------------------------
-		      </t>
                       <t>
                               NEW TEXT:
-		      </t>
-		      <t>
-			      ------------------------------------------------------------------
 		      </t>
 		      <t>
 				      Also, a node belonging to an anycast address MAY multicast
@@ -514,9 +494,6 @@ address (if the device has been performing the address resolution for the router
       following events happens:
 		      </t>
 		      <t>
-			      ------------------------------------------------------------------
-		      </t>
-		      <t>
 			      <list style="symbols">
 				      <t>if Optimistic DAD <xref target="RFC4429"/> is used: a new Optimistic address is assigned
 					      to the node interface.</t>
@@ -528,20 +505,12 @@ address (if the device has been performing the address resolution for the router
 
 		      </t>
 
+                      <t>
+                              ------------------------------------------------------------------
+		      </t>
 	      </section>
 	      </section>
-      </section>
-      <section title="Solution Limitations">
-	      <t>
-			      The solution described in this document provides some improvement for a node configuring a new IPv6 address and start sending traffic from it.
-			      However that approach does not completely eliminate the scenario when a router receives some transit traffic for an address without the corresponding Neighbor Cache entry.
-			      For example:
-		      <list style="symbols">
-			      <t>If the host starts using an already configured IPv6 address after a long period of inactivity, the router might not have the NC entry for that address anymore, as old/expired entries are deleted. </t>
-			      <t>Clearing the router Neighbor Cache would trigger the packet loss for all actively used addresses removed from the cache.</t>
-		      </list>
-	      </t>
-      </section>
+	    </section>
 
 	<section title="Solutions Considered but Discarded">
 		<t>
@@ -592,9 +561,8 @@ address (if the device has been performing the address resolution for the router
 
 	       <section title="Change to the Registration-Based Neighbor Discovery">
                       <t>
-				      The most radical approach would be to move away from the reactive ND as defined in <xref target="RFC4861"/> and expand the registration-based ND (<xref target="RFC6775"/>, <xref target="RFC8505"/>) used in Low-Power Wireless Personal Area Networks (6LoWPANs) to the rest of IPv6 deployments.
-					      This option requires some investigation and discussion.
-					      However the implementation complexity and unclear adoption timeline makes this approach less preferable than one proposed in this document.
+                              The most radical approach would be to move away from the reactive ND as defined in <xref target="RFC4861"/> and expand the registration-based ND (<xref target="RFC6775"/>, <xref target="RFC8505"/>) used in Low-Power Wireless Personal Area Networks (6LoWPANs) to the rest of IPv6 deployments.
+                              This option requires some investigation and discussions and seems to be excessive for the problem described in this document.
                       </t>
 	      </section>
 
@@ -701,34 +669,6 @@ address (if the device has been performing the address resolution for the router
                                       </list>
                       </t>
 	      </section>
-	      <section title="Making the Probing Logic on Hosts More Robust">
-		      <t>
-				      Theoretically the probing logic on hosts might be modified to deal better with initial packet loss. For example, only one probe can be sent or probes retransmit intervals can be reduced. However, this approach has a number of drawbacks:
-
-			      <list style="symbols">
-				      <t>It would require updating all possible applications performing probing, while the proposed solution is implemented on operating systems level.</t>
-				      <t>Some implementations need to send multiple probes. Examples are including but not limited to:
-				      <list style="symbols">
-					      <t>Sending AAAA and A records DNS probes in parallel.</t>
-					      <t>Detecting captive portals often require sending multiple packets.</t>
-				      </list>
-				      </t>
-				      <t>While it would increase the probability of the probing to complete successfully, there are multiple cases when packet loss would still occur:
-				      <list style="symbols">
-					      <t> The probe response consists of multiple packets, so all but the first one are dropped. </t>
-					      <t> There are multiple applications on the same host sending traffic and return packets arrive simultaneously.</t>
-					      <t> There are multiple first-hop routers in the network. The first probe packet creates the NC entry on one of them. The subsequent return traffic flows might cross other routers and still experince the issue.</t>
-				      </list>
-			      </t>
-		      </list>
-		      </t>
-		      </section>
-		      <section title="Increasing the Buffer Size on Routers">
-			      <t>
-					      Increasing the buffer size and buffering more packets would exacerbate issues described in <xref target="RFC6583"/> and make the router more vulnerable to ND-based denial of service attacks.
-			      </t>
-		      </section>
-
 
 	      <section title="Transit Dataplane Traffic From a New Address Triggering Address Resolution">
 		      <t>
