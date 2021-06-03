@@ -768,8 +768,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Security" title="Security Considerations">
 	    <t>
 		    One of the potential attack vectors to consider is a cache spoofing when the attacker might try to install a cache entry for the victim's IPv6 address and the attacker's Link-Layer address. However it should be noted that this document does not propose any changes for the scenario when the ND cache for the given IPv6 address already exists.
-		    Therefore there are no new vectors for an attacker to override any existing cache entry.
-
+		    Therefore there are no new vectors for an attacker to override an existing cache entry.
 	    </t>
 	    <t>
 		    A malicious host could attempt to exhaust the neighbor cache on the router by creating a large number of STALE entries. However this attack vector is not new and this document does not increase the risk of such an attack: the attacker could do it, for example, by sending a NS or RS packet with SLLAO included. All recommendations from <xref target="RFC6583"/> still apply.
