@@ -124,6 +124,10 @@
 					  All subsequent packets arriving before the resolution process finishes are likely to be dropped.
                                           It can causes packet loss and performance degradation that can be user-visible.
 		  </t>
+<t>
+This document updates the Neighbor Discovery protocol to avoid packet loss in the scenario described above.
+<xref target="changes"/> discusses the changes and analyses the potential impact, while normative changes to <xref target="RFC4861"/> are specified in <xref target="RFC_UPD"/>.
+</t>
 		  <section title="Requirements Language">
 			  <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
                         "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -247,7 +251,7 @@ address (if the device has been performing the address resolution for the router
         </t>
  </section>
 
-      <section title="Changes to Neighbor Discovery">
+      <section anchor="changes" title="Changes to Neighbor Discovery">
 	      <t>
 		      The following changes are required to minimize the delay in creating new entries in a router neighbor cache
 		      <list style="symbols">
@@ -261,7 +265,7 @@ address (if the device has been performing the address resolution for the router
 	      </t>
 	      <t>
 		      The following sections discuss these changes in more detail.
-    Normative changes are specified in section 6.
+    Normative changes are specified in <xref target="RFC_UPD"/>.
 	      </t>
 	      <section anchor="hosts" title="Nodes Sending Gratuitous Neighbor Advertisements">
 		      <t>
@@ -546,7 +550,7 @@ address (if the device has been performing the address resolution for the router
 	      </t>
       </section>
 
-	<section title="Solutions Considered but Discarded">
+	<section anchor="others" title="Solutions Considered but Discarded">
 		<t>
                       There are other possible approaches to address the problem, for example:
                       <list style="symbols">
