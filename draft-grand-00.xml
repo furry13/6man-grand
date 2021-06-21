@@ -39,7 +39,7 @@
      obsoletes=""
      category="std"
      updates="4861"
-     docName="draft-ietf-6man-grand-04">
+     docName="draft-ietf-6man-grand-05">
 
   <!-- category values: std, bcp, info, exp, and historic -->
 
@@ -122,7 +122,7 @@
 				  At the same time the router does not have any cache entries for the host global addresses yet and only starts address resolution upon receiving the first packet of the return traffic flow.
 				  While waiting for the resolution to complete routers only keep a very small number of packets in the queue, as recommended in Section 7.2.2 <xref target="RFC4861"/>.
 					  All subsequent packets arriving before the resolution process finishes are likely to be dropped.
-					  It can cause user-visible packet loss and performance degradation.
+                                          It can causes packet loss and performance degradation that can be user-visible.
 		  </t>
 		  <section title="Requirements Language">
 			  <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -202,12 +202,12 @@ address (if the device has been performing the address resolution for the router
                                   </t>
 <t>
                                           Return traffic is received by the first-hop router.
-		As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address.
+		As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address (Section 7.3.2 of <xref target="RFC4861"/>).
 		As per Section 7.2.2 of <xref target="RFC4861"/> Routers MUST buffer at least one data packet and MAY buffer more, while resolving the packet destination address.
 			However most router implementations limit the buffer size to a few packets only, so  all subsequent packets for the host global address are dropped, until the address resolution process is completed.
                                   </t>
                                   <t>
-                                        If the host sends multiple probes in parallel, it would consider all but one of them failed.
+                                        If the host sends multiple probes in parallel, in the worst case, it would consider all but one of them failed.
                                         That leads to user-visible delay in connecting to the network, especially if the host implements some form of backoff mechanism and does not retransmit the probes as soon as possible.
                                   </t>
                           </list>
@@ -235,7 +235,7 @@ address (if the device has been performing the address resolution for the router
                                  Devices implementing the Optimistic DAD usually attempt to minimize the delay in connecting to the network and therefore are more likely to be affected by the problem described in this document.
                          </t>
                          <t>
-                                 In case of duplicate addresses present in the network, the proposed solution MUST NOT override the existing entry.
+                                 In case of duplicate addresses present in the network, the proposed solution should not override the existing entry.
                          </t>
                          <t>
                                  In topologies with multiple first-hop routers the cache needs to be updated on all of them, as traffic might be asymmetric: outgoing flows leaving the network via one router while the return traffic enters the segment via another one.
@@ -243,7 +243,7 @@ address (if the device has been performing the address resolution for the router
                 </list>
         </t>
         <t>
-                        In addition the solution MUST NOT exacerbate issues described in <xref target="RFC6583"/> and MUST be compatible with the recommendations provided in <xref target="RFC6583"/>.
+                        In addition the solution must not  exacerbate issues described in <xref target="RFC6583"/> and needs to be compatible with the recommendations provided in <xref target="RFC6583"/>.
         </t>
  </section>
 
@@ -266,7 +266,7 @@ address (if the device has been performing the address resolution for the router
 	      <section anchor="hosts" title="Nodes Sending Gratuitous Neighbor Advertisements">
 		      <t>
 			      The section 7.2.6 of  <xref target="RFC4861"/> discusses using unsolicited Neighbor 
-			      Advertisement to inform node neighbors of the new link-layer address quickly. 
+			      Advertisements to inform node neighbors of the new link-layer address quickly. 
 			      The same mechanism could be used to notify the node neighbors about the new network-layer
 			      address as well: the node can send gratuitous unsolicited Neighbor Advertisements upon assigning a new IPv6 address to its interface. 
 		      </t>
@@ -320,7 +320,7 @@ address (if the device has been performing the address resolution for the router
 		    <t>
 				    The following sections discuss the address collision scenario when a node sends an unsolicited NA for an address in the Optimistic state, while another node has the same address assigned already.
 		    </t>
-		    <section anchor="avoid_dis_exists" title="Neighbor Cache Entry Exists in Any State Other That INCOMPLETE">
+		    <section anchor="avoid_dis_exists" title="Neighbor Cache Entry Exists in Any State Other Than INCOMPLETE">
 		    <t>
 			    If the router Neighbor Cache entry for the target address already exists in any state other than INCOMPLETE, then as  per section 7.2.5 of <xref target="RFC4861"/> an unsolicited NA with the Override flag cleared would change the entry state from REACHABLE to STALE but would not update the entry in any other way. Therefore even if the host sends an unsolicited NA from its Optimistic address the router cache entry would not be updated with the new Link-Layer address  and no impact to the traffic for the rightful address owner is expected.
 		    </t>
@@ -401,7 +401,7 @@ address (if the device has been performing the address resolution for the router
 								    The host starts DAD and detects the address duplication.
 						    </t>
 						    <t>
-								    The router receives the return traffic flows for both the rightful owner of the duplicated address and the new host. As the NC entry is STALE it sends traffic using that entry, changes it to DELAY and wait up to DELAY_FIRST_PROBE_TIME (<xref target="RFC4861"/>) seconds.
+								    The router receives the return traffic flows for both the rightful owner of the duplicated address and the new host. As the NC entry is STALE it sends traffic using that entry, changes it to DELAY and waits up to DELAY_FIRST_PROBE_TIME (<xref target="RFC4861"/>) seconds.
 							    </t>
 							    <t>
 									    The router changes the NC entry state to PROBE and sends up to MAX_UNICAST_SOLICIT (<xref target="RFC4861"/>) unicast NSes separated by RetransTimer milliseconds (<xref target="RFC4861"/>) to the host link-layer address.
@@ -421,10 +421,10 @@ address (if the device has been performing the address resolution for the router
 
 					    </t>
 					    <t>
-							    However it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simultaneously (within tens of milliseconds):
+							    However it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simultaneously (within tens of milliseconds in most cases):
 						    <list style="symbols">
 							    <t>
-									    One host starts using a new IPv6 address and sending traffic.
+									    One host starts using a new IPv6 address and sending traffic without sending an unsolicited NA first.
 							    </t>
 							    <t>
 									    Another host configures the same IPv6 address in Optimistic mode before the router receives the return traffic for the first host.
@@ -520,9 +520,6 @@ address (if the device has been performing the address resolution for the router
       following events happens:
 		      </t>
 		      <t>
-			      ------------------------------------------------------------------
-		      </t>
-		      <t>
 			      <list style="symbols">
 				      <t>if Optimistic DAD <xref target="RFC4429"/> is used: a new Optimistic address is assigned
 					      to the node interface.</t>
@@ -600,7 +597,7 @@ address (if the device has been performing the address resolution for the router
                       <t>
 				      The most radical approach would be to move away from the reactive ND as defined in <xref target="RFC4861"/> and expand the registration-based ND (<xref target="RFC6775"/>, <xref target="RFC8505"/>) used in Low-Power Wireless Personal Area Networks (6LoWPANs) to the rest of IPv6 deployments.
 					      This option requires some investigation and discussion.
-					      However the implementation complexity and unclear adoption timeline makes this approach less preferable than one proposed in this document.
+                                              However significant changes to the existing IPv6 implementations would be needed, so unclear adoption timeline makes this approach less preferable than one proposed in this document.
                       </t>
 	      </section>
 
@@ -726,6 +723,9 @@ address (if the device has been performing the address resolution for the router
 					      <t> There are multiple first-hop routers in the network. The first probe packet creates the NC entry on one of them. The subsequent return traffic flows might cross other routers and still experience the issue.</t>
 				      </list>
 			      </t>
+                              <t>
+                                    Reducing the probe retransmit interval unnecessary increases the network utilization and might cause the network congestion.
+                              </t>
 		      </list>
 		      </t>
 		      </section>
@@ -775,7 +775,7 @@ Implementing such functionality is much more complicated than all other solution
 	    </t>
 	    <t>
 		    Announcing a new address to all-routers multicast address may inform an on-link attacker about IPv6 addresses assigned to the host. However hiding information about the specific IPv6 address should not be considered a security measure as such information is usually disclosed via DAD to all nodes anyway. Network administrators can also mitigate this issue by enabling MLD snooping on the link-layer devices to prevent IPv6 link-local multicast packets being flooded to all onlink nodes. 
-			    If peer-to-peer onlink communications are not desirable for the given network segment they should be prevented by proper layer2 security mechanisms. Therefore the risk of allowing hosts to send unsolicited Neighbor Advertisements to all-routers multicast address is low.
+			    If peer-to-peer onlink communications are not desirable for the given network segment they should be prevented by proper layer-2 security mechanisms. Therefore the risk of allowing hosts to send unsolicited Neighbor Advertisements to all-routers multicast address is low.
 	    </t>
 	    <t>
 		    It should be noted that the proposed mechanism allows hosts to proactively inform their routers about global IPv6 addresses existing on-link. Routers could use that information to distinguish between used and unused addresses to mitigate ND cache exhaustion DoS attacks described in Section 4.3.2 <xref target="RFC3756"/> and <xref target="RFC6583"/>.
@@ -785,7 +785,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Igor Gashinsky, Fernando Gont, Tatuya Jinmei, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
