@@ -39,7 +39,7 @@
      obsoletes=""
      category="std"
      updates="4861"
-     docName="draft-ietf-6man-grand-06">
+     docName="draft-ietf-6man-grand-05">
 
   <!-- category values: std, bcp, info, exp, and historic -->
 
@@ -164,10 +164,10 @@ This document updates the Neighbor Discovery protocol to avoid packet loss in th
 		      RA: Router Advertisement,  <xref target="RFC4861"/>.
 	      </t>
 	      <t>
-		      SLLAO: Source link-layer Address Option, an option in the ND packets containing the link-layer address of the sender of the packet <xref target="RFC4861"/>.
+		      SLLA: Source link-layer Address, an option in the ND packets containing the link-layer address of the sender of the packet <xref target="RFC4861"/>.
 	      </t>
 	      <t>
-		      TLLAO: Target link-layer Address Option, an option in the ND packets containing the link-layer address of the target <xref target="RFC4861"/>.
+		      TLLA: Target link-layer Address, an option in the ND packets containing the link-layer address of the target <xref target="RFC4861"/>.
 	      </t>
 	      <t>
 		      GUA: Global Unicast Address <xref target="RFC4291"/>.
@@ -331,7 +331,7 @@ address (if the device has been performing the address resolution for the router
 	    </section>
 		    <section anchor="avoid_dis_inc" title="Neighbor Cache Entry is in INCOMPLETE state">
 		    <t>
-			    Another corner case is the INCOMPLETE cache entry for the address. If the host sends an unsolicited NA from the Optimistic address it would update the entry with the host link-layer address and set the entry to the STALE state. As the INCOMPLETE entry means that the router has started the ND process for the address and the multicast NS has been sent, the rightful owner is expected to reply with solicited NA with the Override flag set. Upon receiving a solicited NA with the Override flag the cache entry will be updated with the TLLAO supplied and (as the NA has the Solicited flag set), the entry state will be set to REACHABLE. It would recover the cache entry and set the link-layer address to the one of the rightful  owner. The only potential impact would be for packets arriving to the router  after the unsolicited NA from the host but before the rightful owner responded with the solicited NA. Those packets would be sent to the host with the optimistic address instead of its rightful  owner.
+			    Another corner case is the INCOMPLETE cache entry for the address. If the host sends an unsolicited NA from the Optimistic address it would update the entry with the host link-layer address and set the entry to the STALE state. As the INCOMPLETE entry means that the router has started the ND process for the address and the multicast NS has been sent, the rightful owner is expected to reply with solicited NA with the Override flag set. Upon receiving a solicited NA with the Override flag the cache entry will be updated with the TLLA supplied and (as the NA has the Solicited flag set), the entry state will be set to REACHABLE. It would recover the cache entry and set the link-layer address to the one of the rightful  owner. The only potential impact would be for packets arriving to the router  after the unsolicited NA from the host but before the rightful owner responded with the solicited NA. Those packets would be sent to the host with the optimistic address instead of its rightful  owner.
 			    However most likely those packets would have been dropped anyway: creating the INCOMPLETE entry is usually triggered by traffic, so the router probably has some packets in the buffer already, dropping subsequent packets received before the address resolution is completed.
 		    </t>
 	    </section>
@@ -376,24 +376,11 @@ address (if the device has been performing the address resolution for the router
 						    <t>
 								    As the host has detected the address conflict already it does not respond to the unicast NSes.
 						    </t>
-                                                    <t>
-                                                                   As the router receives no response for the unicast NSes, it deletes the NC entry.
-                                                    </t>
-                                             
 						    <t>
-								    If return packets for communication initiated at step 2 are still arriving, the router buffers a small number of those packets and starts the address resolution again by sending a multicast NS to the solicited node multicast address. The rightful owner responds and the router NC entry is updated with the rightful owner link-local address. The buffered packet(s) are sent to that address. Any packets still arriving after the address resolution still completed are sent to the rightful address owner as well.
+								    The router sends a multicast NS to the solicited node multicast address, the rightful owner responds and the router NC entry is updated with the rightful owner link-local address. 
 						    </t>
 					    </list>
-						    The rightful owner is not experiencing any disruption as it does not send any traffic.
-It would only start receiving packets intended for another host after Step 8 is completed and only if return packets for the communication initiated at step 2 are still arriving.
-</t>
-<t>
-
-                                                    However the same behaviour would be observed if changes proposed in this document are not implemented.
-                                                    If the host starts sending packets from its Optimistic address but then changes the address state to Duplicated, the first return packet would trigger the address resolution process and would be buffered until the resolution is completed.
-The buffered packet(s) and any packets still arriving after the address is resolved would be forwarded to the rightful owner of the address.
-So the rightful owner might still receive one or more packets from the flows intended for another host.
-Therefore it's safe to conclude that the proposed changes do introduce any disruption for the rightful owner of the duplicated address.
+						    The rightful owner is not experiencing any disruption as it does not send/receive any traffic. If after step 7 the router keeps receiving any return traffic for communication initiated at step 2, those packets would be forwarded to the rightful owner. However the same behaviour would be observed if changes proposed in this document are implemented: if the host starts sending packets from its Optimistic address but then changes the address state to Duplicated, almost all return traffic would be forwarded to the rightful owner of the said address. Therefore it's safe to conclude that the proposed changes do not cause any disruption for the rightful owner.
 			    </t>
 		    </section>
 		    <section  title="The Rightful Owner Has Started Sending Packets From The Address">
@@ -426,12 +413,9 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
 						    <t>
 								    As the host has detected the address conflict already it does not respond to the unicast NSes.
 						    </t>
-                                                    <t>
-                                                                   As the router receives no response for the unicast NSes, it deletes the NC entry.
-                                                    </t>
 
 						    <t>
-								    The next packet re-creates the entry and triggers the resolution process. The router buffers the packet and sends a multicast NS to the solicited node multicast address. The rightful owner responds and the router NC entry is updated with the rightful owner link-local address. 
+								    The router sends a multicast NS to the solicited node multicast address, the rightful owner responds and the router NC entry is updated with the rightful owner link-local address. 
 						    </t>
 					    </list>
 				    </t>
