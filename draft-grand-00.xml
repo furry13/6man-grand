@@ -145,7 +145,7 @@ This document updates the Neighbor Discovery protocol <xref target="RFC4861"/> t
 		      ND: Neighbor Discovery, <xref target="RFC4861"/>.
 	      </t>
 	      <t>
-		      NC: Neighbor Cache, <xref target="RFC4861"/>.
+		      NC: Neighbor Cache, <xref target="RFC4861"/>. The Neighbor Cache entry can be in one of five states, as described in section 7.3.2 of <xref target="RFC4861"/>: INCOMPLETE, REACHABLE, STALE, DELAY, PROBE.
 	      </t>
 	      <t>
 		      SLAAC: IPv6 Stateless Address Autoconfiguration, <xref target="RFC4862"/>.
@@ -278,13 +278,15 @@ address (if the device has been performing the address resolution for the router
 		      </t>
 		      <t>
 			      As the main purpose of sending unsolicited NAs upon configuring a new address is to proactively create a Neighbor Cache entry on the first-hop routers, the gratuitous NAs are sent to the all-routers multicast address (ff02::2). Limiting the recipients to routers only would help reduce the multicast noise level. 
-			      If the link-layer devices are performing MLD snooping <xref target="RFC4541"/>, then those unsolicited NAs will be only sent to onlink routers instead of being flooded to all nodes. 
+			      If the link-layer devices are performing MLD snooping <xref target="RFC4541"/>, then those unsolicited NAs will be only sent to routers on the given network segment/link, instead of being flooded to all nodes. 
 		      </t>
 	      <t>
 			      It should be noted that the proposed mechanism does not cause any significant increase in multicast traffic.
 			      The additional multicast unsolicited NA would proactively create a STALE cache entry on routers as discussed below.
 			      When the router receives the return traffic flows it does not need to send multicast NSes to the solicited node multicast address but would be sending unicast NSes instead.
-			      Therefore, the total amount of multicast traffic should not increase.
+			      Therefore, unsolicited NAs sent by hosts do not lead to increased amount of multicast traffic, if the routers on that network segment use those NAs to create STALE entries.
+Even if the routers do not yet implement the proposed changes and discard unsolicited NAs, each host would only send MAX_NEIGHBOR_ADVERTISEMENT unsolicited NAs (see <xref target="UPD726"/>) each time a global IPv6 address is assigned on the interface.
+That additional traffic would be a few orders of magnitude less than the usual level of Neighbor Discovery multicast traffic. 
 		      </t>
 	      </section>
 	      <section title="Routers Creating Cache Entries Upon Receiving Unsolicited Neighbor Advertisements">
@@ -310,6 +312,9 @@ address (if the device has been performing the address resolution for the router
 					      The proposed changes do not modify routers behaviour specified in <xref target="RFC4861"/> for the scenario when the corresponding Neighbor Cache entry already exists.
 
 		      </t>
+<t>
+The next section analyses various scenarios of duplicated addresses and discusses the potential impact of creating a STALE entry for a duplicated IPv6 address.
+</t>
 	      </section>
     </section>
 	    <section anchor="avoid_dis" title="Avoiding Disruption">
@@ -364,7 +369,16 @@ The router updates the entry with the TLLAO supplied (the rightful owner link-la
 <t>
 Therefore, the unsolicited NA  causes the following effects:
 <list style="symbols">
-<t> The buffered packets (usually just one packet  but routers may buffer more) are delivered to the wrong node. Without the unsolicited NA the packet(s) would have been delivered to the rightful owner after the address resolution is completed.
+<t> The buffered packets (usually just one packet  but routers may buffer more) are delivered to the wrong node. Without the unsolicited NA the packet(s) would have been delivered to the rightful owner after the address resolution is completed.  However, it should be noted that the probability of such scenario is rather low as it would require the following 
+things to happen almost simultaneously (within tens of milliseconds in most cases):
+                                                    <list style="symbols">
+                                                            <t>
+                                                                            One host starts using a new IPv6 address and sending traffic without sending an unsolicited NA first.
+                                                            </t>
+                                                            <t>
+                                                                            Another host configures the same IPv6 address in Optimistic mode before the router completes the address resolution for the rightful owner.
+                                                            </t>
+                                                    </list>
 </t>
 <t>While all subsequent packets arriving and until Step 8 is completed are also delivered to the wrong node, without the unsolicited NA those packets would have been dropped anyway.
 </t>
@@ -477,7 +491,7 @@ Therefore, it's safe to conclude that the proposed changes do introduce any disr
 
 					    </t>
 					    <t>
-							    However, it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simultaneously (within tens of milliseconds in most cases):
+							    However, it should be noted that the probability of such scenario is rather low. Similary to the scenario discussed in <xref target="avoid_dis_inc"/>, it would require the following things to happen almost simultaneously (within tens of milliseconds in most cases):
 						    <list style="symbols">
 							    <t>
 									    One host starts using a new IPv6 address and sending traffic without sending an unsolicited NA first.
@@ -539,7 +553,7 @@ Therefore, it's safe to conclude that the proposed changes do introduce any disr
 		      </t>
 
 	      </section>
-	      <section title="Modification to the section 7.2.6">
+	      <section anchor="UPD726" title="Modification to the section 7.2.6">
 		      <t>
 			      This document proposes the following changes to the section 7.2.6 of <xref target="RFC4861"/>:
 		      </t>
@@ -842,7 +856,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
