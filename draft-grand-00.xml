@@ -328,8 +328,8 @@ The next section analyses various scenarios of duplicated addresses and discusse
 		    <t>
 				    The following sections discuss the address collision scenario when a node sends an unsolicited NA for an address in the Optimistic state, while another node (the rightful owner) has the same address assigned already.
                                     This document uses the term "the rightful owner" as the same terminology is used in <xref target="RFC4429"/>.
-
-                                   
+The analysis assumes that the host performs Duplicate Address Detection, as section 5.4 of <xref target="RFC4862"/> requires that DAD MUST be performed on all unicast
+   addresses prior to assigning them to an interface.
 		    </t>
 		    <section anchor="avoid_dis_exists" title="Neighbor Cache Entry Exists in Any State Other Than INCOMPLETE">
 		    <t>
@@ -841,6 +841,10 @@ Implementing such functionality is much more complicated than all other solution
 		    One of the potential attack vectors to consider is a cache spoofing when the attacker might try to install a cache entry for the victim's IPv6 address and the attacker's Link-Layer address. However, it should be noted that this document does not propose any changes for the scenario when the ND cache for the given IPv6 address already exists.
 		    Therefore, there are no new vectors for an attacker to override an existing cache entry.
 	    </t>
+<t>
+<xref target="avoid_dis"/> describes some corner cases when a host with the duplicated Optimistic address might get some packets intended for the rightful owner of the address. However such scenarios do not introduce any new attack vectors: even without the proposed changes, an attacker can easily override the routers neighbor cache and redirect the traffic by sending NAs with the Solicited flag set.
+
+</t>
 	    <t>
 		    A malicious host could attempt to exhaust the neighbor cache on the router by creating a large number of STALE entries. However, this attack vector is not new and this document does not increase the risk of such an attack: the attacker could do it, for example, by sending a NS or RS packet with SLLAO included. All recommendations from <xref target="RFC6583"/> still apply.
 	    </t>
@@ -856,7 +860,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Roman Danyliw, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
