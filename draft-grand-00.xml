@@ -107,8 +107,7 @@
 	  <section title="Introduction">
 
 		  <t>
-			  The Neighbor Discovery state machine defined in  <xref target="RFC4861"/> assumes that communications between IPv6 nodes
-			  are in most cases bi-directional and if a node A is trying to communicate to its neighbor, node B, the return traffic flows could be expected.  So when the node A starts the address resolution process, the target node B would also create an entry containing A's IPv6 and link-layer addresses in its neighbor cache. That entry will be used for sending the return traffic to A.
+			  The Neighbor Discovery state machine defined in  <xref target="RFC4861"/> assumes that communications between IPv6 nodes are in most cases bi-directional and if a node A is trying to communicate to its neighbor, node B, the return traffic flows could be expected.  So when the node A starts the address resolution process, the target node B would also create an entry containing A's IPv6 and link-layer addresses in its neighbor cache. That entry will be used for sending the return traffic to A.
 		  </t>
 			  <t>
                           In particular, section 7.2.5 of <xref target="RFC4861"/> states:
@@ -125,7 +124,7 @@
                                           It can causes packet loss and performance degradation that can be user-visible.
 		  </t>
 <t>
-This document updates the Neighbor Discovery protocol to avoid packet loss in the scenario described above.
+This document updates the Neighbor Discovery protocol <xref target="RFC4861"/> to avoid packet loss in the scenario described above.
 <xref target="changes"/> discusses the changes and analyses the potential impact, while normative changes to <xref target="RFC4861"/> are specified in <xref target="RFC_UPD"/>.
 </t>
 		  <section title="Requirements Language">
@@ -208,7 +207,7 @@ address (if the device has been performing the address resolution for the router
                                           Return traffic is received by the first-hop router.
 		As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address (Section 7.3.2 of <xref target="RFC4861"/>).
 		As per Section 7.2.2 of <xref target="RFC4861"/> Routers MUST buffer at least one data packet and MAY buffer more, while resolving the packet destination address.
-			However most router implementations limit the buffer size to a few packets only, so  all subsequent packets for the host global address are dropped, until the address resolution process is completed.
+			However, most router implementations limit the buffer size to a few packets only, so  all subsequent packets for the host global address are dropped, until the address resolution process is completed.
                                   </t>
                                   <t>
                                         If the host sends multiple probes in parallel, in the worst case, it would consider all but one of them failed.
@@ -285,7 +284,7 @@ address (if the device has been performing the address resolution for the router
 			      It should be noted that the proposed mechanism does not cause any significant increase in multicast traffic.
 			      The additional multicast unsolicited NA would proactively create a STALE cache entry on routers as discussed below.
 			      When the router receives the return traffic flows it does not need to send multicast NSes to the solicited node multicast address but would be sending unicast NSes instead.
-			      Therefore the total amount of multicast traffic should not increase.
+			      Therefore, the total amount of multicast traffic should not increase.
 		      </t>
 	      </section>
 	      <section title="Routers Creating Cache Entries Upon Receiving Unsolicited Neighbor Advertisements">
@@ -304,7 +303,7 @@ address (if the device has been performing the address resolution for the router
    recipient has apparently not initiated any communication with the
    target") is valid for onlink host-to-host communication but, as discussed above, 
    it does not really apply for the scenario when the host is announcing its address to routers.
-   Therefore it would be beneficial to allow routers to create new entries upon receiving an unsolicited Neighbor Advertisement.
+   Therefore, it would be beneficial to allow routers to create new entries upon receiving an unsolicited Neighbor Advertisement.
 		      </t>
 		      <t>
 				      This document updates <xref target="RFC4861"/> so that routers create a new Neighbor Cache entry upon receiving an unsolicited Neighbor Advertisement.
@@ -316,24 +315,61 @@ address (if the device has been performing the address resolution for the router
 	    <section anchor="avoid_dis" title="Avoiding Disruption">
 		    <t>
 				    If nodes following the recommendations in this document are using the DAD mechanism defined in <xref target="RFC4862"/>, they would send unsolicited NA as soon as the address changes the state from tentative to preferred (after its uniqueness has been verified).
-					    However nodes willing to minimize network stack configuration delays might be using optimistic addresses, which means there is a possibility of the address not being unique on the link.
+					    However, nodes willing to minimize network stack configuration delays might be using optimistic addresses, which means there is a possibility of the address not being unique on the link.
 					    The section 2.2 of <xref target="RFC4429"/> discusses measures to ensure that ND packets from the optimistic address do not override any existing neighbor cache entries as it would cause traffic interruption of the rightful  address owner in case of address conflict.
 						    As nodes willing to speed up their network stack configuration are most likely to be affected by the problem outlined in this document it seems reasonable for such hosts to advertise their optimistic addresses by sending unsolicited NAs. 
 						    The main question to consider is the potential risk of overriding the cache entry for the rightful address owner if the optimistic address happens to be duplicated.  
 		    </t>
 		    <t>
-				    The following sections discuss the address collision scenario when a node sends an unsolicited NA for an address in the Optimistic state, while another node has the same address assigned already.
+				    The following sections discuss the address collision scenario when a node sends an unsolicited NA for an address in the Optimistic state, while another node (the rightful owner) has the same address assigned already.
+                                    This document uses the term "the rightful owner" as the same terminology is used in <xref target="RFC4429"/>.
+
+                                   
 		    </t>
 		    <section anchor="avoid_dis_exists" title="Neighbor Cache Entry Exists in Any State Other Than INCOMPLETE">
 		    <t>
-			    If the router Neighbor Cache entry for the target address already exists in any state other than INCOMPLETE, then as  per section 7.2.5 of <xref target="RFC4861"/> an unsolicited NA with the Override flag cleared would change the entry state from REACHABLE to STALE but would not update the entry in any other way. Therefore even if the host sends an unsolicited NA from its Optimistic address the router cache entry would not be updated with the new Link-Layer address  and no impact to the traffic for the rightful address owner is expected.
+			    If the router Neighbor Cache entry for the target address already exists in any state other than INCOMPLETE, then as  per section 7.2.5 of <xref target="RFC4861"/> an unsolicited NA with the Override flag cleared would change the entry state from REACHABLE to STALE but would not update the entry in any other way. Therefore, even if the host sends an unsolicited NA from its Optimistic address the router cache entry would not be updated with the new Link-Layer address  and no impact to the traffic for the rightful address owner is expected.
 		    </t>
 	    </section>
 		    <section anchor="avoid_dis_inc" title="Neighbor Cache Entry is in INCOMPLETE state">
 		    <t>
-			    Another corner case is the INCOMPLETE cache entry for the address. If the host sends an unsolicited NA from the Optimistic address it would update the entry with the host link-layer address and set the entry to the STALE state. As the INCOMPLETE entry means that the router has started the ND process for the address and the multicast NS has been sent, the rightful owner is expected to reply with solicited NA with the Override flag set. Upon receiving a solicited NA with the Override flag the cache entry will be updated with the TLLAO supplied and (as the NA has the Solicited flag set), the entry state will be set to REACHABLE. It would recover the cache entry and set the link-layer address to the one of the rightful  owner. The only potential impact would be for packets arriving to the router  after the unsolicited NA from the host but before the rightful owner responded with the solicited NA. Those packets would be sent to the host with the optimistic address instead of its rightful  owner.
-			    However most likely those packets would have been dropped anyway: creating the INCOMPLETE entry is usually triggered by traffic, so the router probably has some packets in the buffer already, dropping subsequent packets received before the address resolution is completed.
+			    Another corner case is the INCOMPLETE cache entry for the address. 
+				    <list style="numbers">
+<t>
+The router receives a packet for the address.
+</t>
+<t>
+The router starts the address resolution process by creating an INCOMPLETE entry and sends the multicast NS.
+</t>
+<t>
+More packets arrive at the router for the address in question.
+</t>
+<t>
+The host configures an Optimistic address and sends an unsolicited NA.
+</t>
+<t>
+The router creates a STALE entry and sends the buffered packet(s) to the host (while those packets are actually intended for the rightful owner).
+</t>
+<t>
+As the STALE entry was used to send packets, the router changes the entry state to DELAY and waits up to DELAY_FIRST_PROBE_TIME ([RFC4861], 5 secs) before sending unicast NS.
+</t>
+<t>
+The rightful owner responds with a solicited NA with the Override flag set.
+</t>
+<t>
+The router updates the entry with the TLLAO supplied (the rightful owner link-layer address) and sets the entry state to REACHABLE (as the NA has the Solicited flag set).
+</t>
+                                    </list>
 		    </t>
+<t>
+Therefore, the unsolicited NA  causes the following effects:
+<list style="symbols">
+<t> The buffered packets (usually just one packet  but routers may buffer more) are delivered to the wrong node. Without the unsolicited NA the packet(s) would have been delivered to the rightful owner after the address resolution is completed.
+</t>
+<t>While all subsequent packets arriving and until Step 8 is completed are also delivered to the wrong node, without the unsolicited NA those packets would have been dropped anyway.
+</t>
+</list>
+</t>
 	    </section>
 		    <section anchor="avoid_dis_nonexists" title="Neighbor Cache Entry Does Not Exist">
 			    <t>
@@ -342,7 +378,7 @@ address (if the device has been performing the address resolution for the router
 
 				    <list style="numbers">
 					    <t>
-							    The rightful owner of the address has not been using it for communication.
+							    The rightful owner of the address has not been using it for off-link communication recently or has never used it at all. 
 					    </t>
 					    <t>
 							    The rightful owner just started sending packets from that address but the router has not received any return traffic yet. 
@@ -389,11 +425,11 @@ It would only start receiving packets intended for another host after Step 8 is 
 </t>
 <t>
 
-                                                    However the same behaviour would be observed if changes proposed in this document are not implemented.
+                                                    However, the same behaviour would be observed if changes proposed in this document are not implemented.
                                                     If the host starts sending packets from its Optimistic address but then changes the address state to Duplicated, the first return packet would trigger the address resolution process and would be buffered until the resolution is completed.
 The buffered packet(s) and any packets still arriving after the address is resolved would be forwarded to the rightful owner of the address.
 So the rightful owner might still receive one or more packets from the flows intended for another host.
-Therefore it's safe to conclude that the proposed changes do introduce any disruption for the rightful owner of the duplicated address.
+Therefore, it's safe to conclude that the proposed changes do introduce any disruption for the rightful owner of the duplicated address.
 			    </t>
 		    </section>
 		    <section  title="The Rightful Owner Has Started Sending Packets From The Address">
@@ -418,7 +454,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
 								    The host starts DAD and detects the address duplication.
 						    </t>
 						    <t>
-								    The router receives the return traffic flows for both the rightful owner of the duplicated address and the new host. As the NC entry is STALE it sends traffic using that entry, changes it to DELAY and waits up to DELAY_FIRST_PROBE_TIME (<xref target="RFC4861"/>) seconds.
+								    The router receives the return traffic for the IPv6 address in question. Some flows intended for the rightful owner of the duplicated address, while some are for the new host. As the NC entry is STALE it sends traffic using that entry, changes it to DELAY and waits up to DELAY_FIRST_PROBE_TIME (<xref target="RFC4861"/>) seconds.
 							    </t>
 							    <t>
 									    The router changes the NC entry state to PROBE and sends up to MAX_UNICAST_SOLICIT (<xref target="RFC4861"/>) unicast NSes separated by RetransTimer milliseconds (<xref target="RFC4861"/>) to the host link-layer address.
@@ -441,7 +477,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
 
 					    </t>
 					    <t>
-							    However it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simultaneously (within tens of milliseconds in most cases):
+							    However, it should be noted that the probability of such scenario is rather low as it would require the following things to happen almost simultaneously (within tens of milliseconds in most cases):
 						    <list style="symbols">
 							    <t>
 									    One host starts using a new IPv6 address and sending traffic without sending an unsolicited NA first.
@@ -548,6 +584,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
          tentative to preferred.
 				      </t>
 			      </list>
+			      ------------------------------------------------------------------
 
 		      </t>
 
@@ -557,7 +594,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
       <section title="Solution Limitations">
 	      <t>
 			      The solution described in this document provides some improvement for a node configuring a new IPv6 address and starting sending traffic from it.
-			      However that approach does not completely eliminate the scenario when a router receives some transit traffic for an address without the corresponding Neighbor Cache entry.
+			      However, that approach does not completely eliminate the scenario when a router receives some transit traffic for an address without the corresponding Neighbor Cache entry.
 			      For example:
 		      <list style="symbols">
 			      <t>If the host starts using an already configured IPv6 address after a long period of inactivity, the router might not have the NC entry for that address anymore, as old/expired entries are deleted. </t>
@@ -617,7 +654,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
                       <t>
 				      The most radical approach would be to move away from the reactive ND as defined in <xref target="RFC4861"/> and expand the registration-based ND (<xref target="RFC6775"/>, <xref target="RFC8505"/>) used in Low-Power Wireless Personal Area Networks (6LoWPANs) to the rest of IPv6 deployments.
 					      This option requires some investigation and discussion.
-                                              However significant changes to the existing IPv6 implementations would be needed, so unclear adoption timeline makes this approach less preferable than one proposed in this document.
+                                              However, significant changes to the existing IPv6 implementations would be needed, so unclear adoption timeline makes this approach less preferable than one proposed in this document.
                       </t>
 	      </section>
 
@@ -660,7 +697,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
                               <t>
 				      The host could send a router solicitation message to 'all routers' multicast address, using its GUA as a source.
 				      If the host link-layer address is included in the Source Link-Layer Address option, the router would create a STALE entry for the host GUA as per the section 6.2.6 of <xref target="RFC4861"/>.
-				      However, this approach can not be used if the GUA is in optimistic state: section 2.2 of <xref target="RFC4429"/> explicitly prohibits using an Optimistic Address as the source address of a Router Solicitation with a SLLAO as it might disrupt the rightful owner of the address in the case of a collision.
+				      However, this approach cannot be used if the GUA is in optimistic state: section 2.2 of <xref target="RFC4429"/> explicitly prohibits using an Optimistic Address as the source address of a Router Solicitation with a SLLAO as it might disrupt the rightful owner of the address in the case of a collision.
 				      So for the optimistic addresses the host can send an RS without SLLAO included.
 				      In that case the router may respond with either a multicast or a unicast RA (only the latter would create a cache entry).
                       </t>
@@ -668,7 +705,7 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
 			      This approach has the following drawbacks:
                                       <list style="symbols">
                                               <t>
-						      If the address is in the Optimistic state the RS can not contain SLLAO. As a result the router would only create a cache entry if solicited RAs are sent as unicast.
+						      If the address is in the Optimistic state the RS cannot contain SLLAO. As a result the router would only create a cache entry if solicited RAs are sent as unicast.
 						      Routers sending solicited RAs as multicast would not create a new cache entry as they do not need to send a unicast packet back to the host.
 					      </t>
 					      <t>
@@ -758,16 +795,16 @@ Therefore it's safe to conclude that the proposed changes do introduce any disru
 
 	      <section title="Transit Dataplane Traffic From a New Address Triggering Address Resolution">
 		      <t>
-			      When a router receives a transit packet, it might check the presence of the neighbor cache entry for the packet source address and if the entry does not exist, start address resolution process.
+			      When a router receives a transit packet sourced by a on-link neighbor node, it might check the presence of the neighbor cache entry for the packet source address and if the entry does not exist, start address resolution process.
 			      This approach does ensure that a Neighbor Cache entry is proactively created every time a new, previously unseen GUA is used for sending offlink traffic.
-However this approach has a number of limitations, in particular:
+However, this approach has a number of limitations, in particular:
 <list style="symbols">
 <t>If traffic flows are asymmetrical the return traffic might not transit the same router as the original traffic which triggered the address resolution.
 So the neighbor cache entry is created on the "wrong" router, not the one which actually needs the neighbor cache entry for the host address.
 </t>
 <t>
 	The functionality needs to be limited to explicitly configured networks/interfaces, as the router needs to distinguish between onlink addresses (ones the router needs to have Neighbor Cache entries for) and the rest of the address space. 
-	The proactive address resolution must only be triggered by packets from the prefixes known to be on-link. Otherwise traffic from spoofed source addresses or any transit traffic could lead to neighbor cache exhaustion.
+	The proactive address resolution must only be triggered by packets from the prefixes known to be on-link. Otherwise, traffic from spoofed source addresses or any transit traffic could lead to neighbor cache exhaustion.
 </t>
 <t>
 Implementing such functionality is much more complicated than all other solutions as it would involve complex data-control planes interaction.
@@ -787,15 +824,15 @@ Implementing such functionality is much more complicated than all other solution
 
     <section anchor="Security" title="Security Considerations">
 	    <t>
-		    One of the potential attack vectors to consider is a cache spoofing when the attacker might try to install a cache entry for the victim's IPv6 address and the attacker's Link-Layer address. However it should be noted that this document does not propose any changes for the scenario when the ND cache for the given IPv6 address already exists.
-		    Therefore there are no new vectors for an attacker to override an existing cache entry.
+		    One of the potential attack vectors to consider is a cache spoofing when the attacker might try to install a cache entry for the victim's IPv6 address and the attacker's Link-Layer address. However, it should be noted that this document does not propose any changes for the scenario when the ND cache for the given IPv6 address already exists.
+		    Therefore, there are no new vectors for an attacker to override an existing cache entry.
 	    </t>
 	    <t>
-		    A malicious host could attempt to exhaust the neighbor cache on the router by creating a large number of STALE entries. However this attack vector is not new and this document does not increase the risk of such an attack: the attacker could do it, for example, by sending a NS or RS packet with SLLAO included. All recommendations from <xref target="RFC6583"/> still apply.
+		    A malicious host could attempt to exhaust the neighbor cache on the router by creating a large number of STALE entries. However, this attack vector is not new and this document does not increase the risk of such an attack: the attacker could do it, for example, by sending a NS or RS packet with SLLAO included. All recommendations from <xref target="RFC6583"/> still apply.
 	    </t>
 	    <t>
-		    Announcing a new address to all-routers multicast address may inform an on-link attacker about IPv6 addresses assigned to the host. However hiding information about the specific IPv6 address should not be considered a security measure as such information is usually disclosed via DAD to all nodes anyway. Network administrators can also mitigate this issue by enabling MLD snooping on the link-layer devices to prevent IPv6 link-local multicast packets being flooded to all onlink nodes. 
-			    If peer-to-peer onlink communications are not desirable for the given network segment they should be prevented by proper layer-2 security mechanisms. Therefore the risk of allowing hosts to send unsolicited Neighbor Advertisements to all-routers multicast address is low.
+		    Announcing a new address to all-routers multicast address may inform an on-link attacker about IPv6 addresses assigned to the host. However, hiding information about the specific IPv6 address should not be considered a security measure as such information is usually disclosed via DAD to all nodes anyway if MLD snooping is not enabled. Network administrators can also mitigate this issue by enabling MLD snooping on the link-layer devices to prevent IPv6 link-local multicast packets being flooded to all onlink nodes. 
+			    If peer-to-peer onlink communications are not desirable for the given network segment they should be prevented by proper layer-2 security mechanisms. Therefore, the risk of allowing hosts to send unsolicited Neighbor Advertisements to all-routers multicast address is low.
 	    </t>
 	    <t>
 		    It should be noted that the proposed mechanism allows hosts to proactively inform their routers about global IPv6 addresses existing on-link. Routers could use that information to distinguish between used and unused addresses to mitigate ND cache exhaustion DoS attacks described in Section 4.3.2 <xref target="RFC3756"/> and <xref target="RFC6583"/>.
@@ -805,7 +842,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
