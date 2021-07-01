@@ -338,13 +338,16 @@ The analysis assumes that the host performs Duplicate Address Detection, as sect
 		    <t>
 			    If the router Neighbor Cache entry for the target address already exists in any state other than INCOMPLETE, then as  per section 7.2.5 of <xref target="RFC4861"/> an unsolicited NA with the Override flag cleared would change the entry state from REACHABLE to STALE but would not update the entry in any other way. Therefore, even if the host sends an unsolicited NA from its Optimistic address the router cache entry would not be updated with the new Link-Layer address  and no impact to the traffic for the rightful address owner is expected.
 		    </t>
+<t>
+The return traffic intended for the host with the Optimistic address would be sent to the rightful owner. However, this is unavoidable with or without the unsolicited NA mechanism.
+</t>
 	    </section>
 		    <section anchor="avoid_dis_inc" title="Neighbor Cache Entry is in INCOMPLETE state">
 		    <t>
 			    Another corner case is the INCOMPLETE cache entry for the address. 
 				    <list style="numbers">
 <t>
-The router receives a packet for the address.
+The router receives a packet for the rightful owner of the address.
 </t>
 <t>
 The router starts the address resolution process by creating an INCOMPLETE entry and sends the multicast NS.
@@ -356,7 +359,7 @@ More packets arrive at the router for the address in question.
 The host configures an Optimistic address and sends an unsolicited NA.
 </t>
 <t>
-The router creates a STALE entry and sends the buffered packet(s) to the host (while those packets are actually intended for the rightful owner).
+The router creates a STALE entry and sends the buffered packet(s) to the host (while at least some of those packets are actually intended for the rightful owner).
 </t>
 <t>
 As the STALE entry was used to send packets, the router changes the entry state to DELAY and waits up to DELAY_FIRST_PROBE_TIME ([RFC4861], 5 secs) before sending unicast NS.
@@ -370,9 +373,9 @@ The router updates the entry with the TLLAO supplied (the rightful owner link-la
                                     </list>
 		    </t>
 <t>
-Therefore, the unsolicited NA  causes the following effects:
-<list style="symbols">
-<t> The buffered packets (usually just one packet  but routers may buffer more) are delivered to the wrong node. Without the unsolicited NA the packet(s) would have been delivered to the rightful owner after the address resolution is completed.  However, it should be noted that the probability of such scenario is rather low as it would require the following 
+As a result some packets (ones in the buffer at Step 6 and all packets arriving between Step 6 and Step 8) are delivered to the host with the Optimisitc address, while some of them, if not all, are intended for the rightful owner. 
+Without the unsolicited NA packet which are in the buffer at Step 8 (usually just one packet but some routers may buffer a few) would have been delivered to the rightful owner and the rest of the packets would have been dropped.
+However, the probability of such scenario is rather low as it would require the following 
 things to happen almost simultaneously (within tens of milliseconds in most cases):
                                                     <list style="symbols">
                                                             <t>
@@ -383,9 +386,8 @@ things to happen almost simultaneously (within tens of milliseconds in most case
                                                             </t>
                                                     </list>
 </t>
-<t>While all subsequent packets arriving and until Step 8 is completed are also delivered to the wrong node, without the unsolicited NA those packets would have been dropped anyway.
-</t>
-</list>
+<t>
+It should be noted that in this scenario the rigthful owner does not send any unsolicited NAs before sending packets. If the rightful owner implements the functionality described in this document and sends unsolicited NAs upon configuring its address, then the router creates a STALE entry for the address, causing all packets are delivered to the rightful owner (see <xref target="avoid_dis_exists"/>). The rightful owner would experience no disruption but might receive some packets intended for the host with Optimistic address.
 </t>
 	    </section>
 		    <section anchor="avoid_dis_nonexists" title="Neighbor Cache Entry Does Not Exist">
@@ -427,7 +429,7 @@ things to happen almost simultaneously (within tens of milliseconds in most case
 									    The router changes the NC entry state to PROBE and sends up to MAX_UNICAST_SOLICIT (<xref target="RFC4861"/>) unicast NSes separated by RetransTimer milliseconds (<xref target="RFC4861"/>) to the host link-layer address.
 						    </t>
 						    <t>
-								    As the host has detected the address conflict already it does not respond to the unicast NSes.
+								    As the host has detected the address conflict already it does not respond to the unicast NSes. (It is unlikely that the host has not completed the DAD process at this stage, as DELAY_FIRST_PROBE_TIME (5 seconds) is much higher than the DAD duration (DupAddrDetectTransmits*RetransTimer*1000 + MAX_RTR_SOLICITATION_DELAY secs, section 5.4 of <xref target="RFC4862"/>). The default value for the DAD process would be 1*1*1000 + 1 = 2 secs, <xref target="RFC4861"/>. If the host has completed DAD but did not detect the address conflict then there are two hosts with the same address in the Preferred state and the disruption is inevitable anyway.
 						    </t>
                                                     <t>
                                                                    As the router receives no response for the unicast NSes, it deletes the NC entry.
@@ -449,7 +451,7 @@ So the rightful owner might still receive one or more packets from the flows int
 Therefore, it's safe to conclude that the proposed changes do introduce any disruption for the rightful owner of the duplicated address.
 			    </t>
 		    </section>
-		    <section  title="The Rightful Owner Has Started Sending Packets From The Address">
+		    <section  anchor="dis_start" title="The Rightful Owner Has Started Sending Packets From The Address">
 			    <t>
 					    In this scenario the following events are happening:
 
@@ -504,6 +506,10 @@ Therefore, it's safe to conclude that the proposed changes do introduce any disr
 							    </t>
 						    </list>
 					    </t>
+<t>
+As discussed in <xref target="avoid_dis_inc"/>, the disruption to the rightful owner can easily be prevent if that node implements the mechanism described in the document. Sending unsolicited NAs before initiatining off-link communication would create a STALE entry in the router NC and prevent any tarffic to that address to be sent to the host with the Optimistic address (see <xref target="avoid_dis_exists"/>).
+</t>
+
 		    </section>
 	    </section>
 
@@ -549,7 +555,7 @@ Therefore, it's safe to conclude that the proposed changes do introduce any disr
    If no entry exists, hosts SHOULD  silently discard the advertisement.
    There is no need to create an entry if none exists, since the
    recipient has apparently not initiated any communication with the
-				      target. Routers SHOULD create a new entry for the target address with the link-layer address set to the Target link-layer address option (if supplied). The entry's reachability state MUST also be set to STALE. If the received Neighbor Advertisement does not contain the Target link-layer address option the advertisement SHOULD be silently discarded. 
+				      target. Routers SHOULD create a new entry for the target address with the link-layer address set to the Target link-layer address option (if supplied). The entry's reachability state MUST be set to STALE. If the received Neighbor Advertisement does not contain the Target link-layer address option the advertisement SHOULD be silently discarded. 
 		      </t>
 		      <t>
 			      ------------------------------------------------------------------
@@ -846,7 +852,7 @@ Implementing such functionality is much more complicated than all other solution
 	    </t>
 <t>
 <xref target="avoid_dis"/> describes some corner cases when a host with the duplicated Optimistic address might get some packets intended for the rightful owner of the address. However such scenarios do not introduce any new attack vectors: even without the proposed changes, an attacker can easily override the routers neighbor cache and redirect the traffic by sending NAs with the Solicited flag set.
-
+As discussed in <xref target="dis_start"/> the worst case scenario might cause a disruption for up to 7 seconds. This risk is considered acceptable due to very low probability of that scenario. More importantly, for all cases described in <xref target="avoid_dis"/> the rightful owner can prevent disruption caused by an accidental address duplication just by implementing the mechanism described in this document. If the rightful owner sends unsolicited NAs before using the address, the STALE entry would be created on the router NC and any subsequent unsolicited NAs sent from the host with an Optimistic address would not override the NC entry. 
 </t>
 	    <t>
 		    A malicious host could attempt to exhaust the neighbor cache on the router by creating a large number of STALE entries. However, this attack vector is not new and this document does not increase the risk of such an attack: the attacker could do it, for example, by sending a NS or RS packet with SLLAO included. All recommendations from <xref target="RFC6583"/> still apply.
@@ -863,7 +869,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Roman Danyliw, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Benjamin Kaduk, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Roman Danyliw, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Benjamin Kaduk, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, John Scudder, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
@@ -877,9 +883,6 @@ Implementing such functionality is much more complicated than all other solution
       &RFC4429;
       &RFC4861;
 		    &RFC4862;
-		    &RFC6775;
-    &RFC8305;
-      &RFC8505;
       &RFC8174;
     </references>
 
@@ -887,6 +890,9 @@ Implementing such functionality is much more complicated than all other solution
 	    &RFC3756;
 	    &RFC4541;
 		    &RFC6583;
+		    &RFC6775;
+    &RFC8305;
+      &RFC8505;
 		    &RFC8981;
             <?rfc include="reference.I-D.halpern-6man-nd-pre-resolve-addr" ?>
     </references>
