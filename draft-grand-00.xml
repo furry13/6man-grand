@@ -8,7 +8,6 @@
 <!ENTITY RFC4541 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4541.xml">
 <!ENTITY RFC4861 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4861.xml">
 <!ENTITY RFC4862 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4862.xml">
-<!ENTITY RFC4941 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4941.xml">
 <!ENTITY RFC6052 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6052.xml">
 <!ENTITY RFC6105 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6105.xml">
 <!ENTITY RFC6146 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6146.xml">
@@ -23,6 +22,7 @@
 <!ENTITY RFC8174 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8174.xml">
 <!ENTITY RFC8305 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8305.xml">
 <!ENTITY RFC8505 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8505.xml">
+<!ENTITY RFC8981 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.8981.xml">
 ]>
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
 <?rfc toc="yes" ?>
@@ -120,7 +120,7 @@
 				  After joining the network and receiving a Router Advertisement the host populates its neighbor cache with the default router IPv6 and link-layer addresses and is able to send traffic to off-link destinations.
 				  At the same time the router does not have any cache entries for the host global addresses yet and only starts address resolution upon receiving the first packet of the return traffic flow.
 				  While waiting for the resolution to complete routers only keep a very small number of packets in the queue, as recommended in Section 7.2.2 <xref target="RFC4861"/>.
-					  All subsequent packets arriving before the resolution process finishes are likely to be dropped.
+Any additional packets arriving before the resolution > process finishes are likely to result in dropped packets
                                           It can causes packet loss and performance degradation that can be user-visible.
 		  </t>
 <t>
@@ -175,6 +175,9 @@ This document updates the Neighbor Discovery protocol <xref target="RFC4861"/> t
 	      <t>
 		      DAD: Duplicate Address Detection,  <xref target="RFC4862"/>.
 	      </t>
+<t>
+Preferred Address: an address assigned to an interface whose uniqueness has been verified using DAD and whose use by upper-layer protocols is unrestricted, <xref target="RFC4862"/>. Preferred addresses may be used as the source address of packets sent from the interface. 
+</t>
 	      <t>
 		      Optimistic DAD: a modification of DAD, <xref target="RFC4429"/>.
 	      </t>
@@ -207,7 +210,8 @@ address (if the device has been performing the address resolution for the router
                                           Return traffic is received by the first-hop router.
 		As the router does not have any cache entry for the host global address yet, the router starts the neighbor discovery process by creating an INCOMPLETE cache entry and then sending a Neighbor Solicitation to the Solicited Node Multicast Address (Section 7.3.2 of <xref target="RFC4861"/>).
 		As per Section 7.2.2 of <xref target="RFC4861"/> Routers MUST buffer at least one data packet and MAY buffer more, while resolving the packet destination address.
-			However, most router implementations limit the buffer size to a few packets only, so  all subsequent packets for the host global address are dropped, until the address resolution process is completed.
+			However, most router implementations limit the buffer size to a few packets only, and some implementations are known to buffer just one packet.
+So any subsequent packets arriving before the address resolution process is completed are causing packet loss by replacing older packets in the buffer.
                                   </t>
                                   <t>
                                         If the host sends multiple probes in parallel, in the worst case, it would consider all but one of them failed.
@@ -217,7 +221,7 @@ address (if the device has been performing the address resolution for the router
                   </t>
                   <t>
                                   This scenario illustrates the problem occurring when the device connects to the network for the first time or after an inactivity period long enough for the device address to be removed from the router's neighbor cache.
-                                  However, the same sequence of events happen when the host starts using a new global address previously unseen by the router, such as a new privacy address <xref target="RFC4941"/> or if the router's Neighbor Cache has been flushed.
+                                  However, the same sequence of events happen when the host starts using a new global address previously unseen by the router, such as a new privacy address <xref target="RFC8981"/> or if the router's Neighbor Cache has been flushed.
                   </t>
                   <t>
                           While in dual-stack networks this problem might be hidden by Happy Eyeballs <xref target="RFC8305"/> it manifests quite clearly in IPv6-only environments, especially wireless ones, leading to poor user experience and contributing to a negative perception of IPv6-only solutions as unstable and non-deployable.
@@ -231,7 +235,7 @@ address (if the device has been performing the address resolution for the router
 
                  <list style="symbols">
                          <t>
-                                 If the router does not have a Neighbor Cache entry for the address, a STALE entry needs to be created.
+                                 If the router does not have a Neighbor Cache entry for the address, a STALE entry needs to be created proactively, prior to arrival of the first packet intended for that address.
                          </t>
                          <t>
                                  The solution needs to work for Optimistic addresses as well.
@@ -284,9 +288,7 @@ address (if the device has been performing the address resolution for the router
 			      It should be noted that the proposed mechanism does not cause any significant increase in multicast traffic.
 			      The additional multicast unsolicited NA would proactively create a STALE cache entry on routers as discussed below.
 			      When the router receives the return traffic flows it does not need to send multicast NSes to the solicited node multicast address but would be sending unicast NSes instead.
-			      Therefore, unsolicited NAs sent by hosts do not lead to increased amount of multicast traffic, if the routers on that network segment use those NAs to create STALE entries.
-Even if the routers do not yet implement the proposed changes and discard unsolicited NAs, each host would only send MAX_NEIGHBOR_ADVERTISEMENT unsolicited NAs (see <xref target="UPD726"/>) each time a global IPv6 address is assigned on the interface.
-That additional traffic would be a few orders of magnitude less than the usual level of Neighbor Discovery multicast traffic. 
+                              Therefore this procedure would only produce an increase in the overall amount of multicast traffic if no return traffic arrives for the address that sent the unsolicited NA or if the router does not create a STALE entry upon receiving such NA. The increase would be negligible as that additional traffic is a few orders of magnitude less than the usual level of Neighbor Discovery multicast traffic. 
 		      </t>
 	      </section>
 	      <section title="Routers Creating Cache Entries Upon Receiving Unsolicited Neighbor Advertisements">
@@ -308,7 +310,8 @@ That additional traffic would be a few orders of magnitude less than the usual l
    Therefore, it would be beneficial to allow routers to create new entries upon receiving an unsolicited Neighbor Advertisement.
 		      </t>
 		      <t>
-				      This document updates <xref target="RFC4861"/> so that routers create a new Neighbor Cache entry upon receiving an unsolicited Neighbor Advertisement.
+				      This document updates <xref target="RFC4861"/> so that routers create a new Neighbor Cache entry upon receiving an unsolicited Neighbor Advertisement  for an address that does not already have a Neighbor Cache entry.
+.
 					      The proposed changes do not modify routers behaviour specified in <xref target="RFC4861"/> for the scenario when the corresponding Neighbor Cache entry already exists.
 
 		      </t>
@@ -860,7 +863,7 @@ Implementing such functionality is much more complicated than all other solution
     <section anchor="Acknowledgements" title="Acknowledgements">
 	    <t>
 		    Thanks to the following people (in alphabetical order) for their
-			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Roman Danyliw, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
+			    comments, review and feedback: Mikael Abrahamsson, Stewart Bryant, Lorenzo Colitti, Roman Danyliw, Owen DeLong, Martin Duke, Igor Gashinsky, Carles Gomez, Fernando Gont, Tatuya Jinmei, Benjamin Kaduk, Scott Kelly, Erik Kline, Warren Kumari, Barry Leiba, Jordi Palet Martinez, Erik Nordmark, Michael Richardson, Dan Romascanu, Zaheduzzaman Sarker, Michael Scharf, Mark Smith, Dave Thaler, Pascal Thubert, Loganaden Velvindron, Eric Vyncke.
 	    </t>
     </section>
   </middle>
@@ -884,7 +887,7 @@ Implementing such functionality is much more complicated than all other solution
 	    &RFC3756;
 	    &RFC4541;
 		    &RFC6583;
-		    &RFC4941;
+		    &RFC8981;
             <?rfc include="reference.I-D.halpern-6man-nd-pre-resolve-addr" ?>
     </references>
 
